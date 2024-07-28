@@ -4,9 +4,9 @@
 
 #include <arm_neon.h>
 
-float32x4_t relu(float32x4_t A);
+float32x4_t relu(const float32x4_t A);
 
-float32x4_t exp(float32x4_t A);
+float32x4_t exp32x4(float32x4_t A);
 
 float32x4_t softmax(float32x4_t A);
 
