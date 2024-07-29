@@ -1,5 +1,5 @@
 FONTE = src/source/
-FONTES = ${FONTE}boot.s $(wildcard ${FONTE}*.c)
+FONTES = $(wildcard ${FONTE}*.c)
 LDSCRIPT = linker.ld
 BUILDDIR = build/
 PROJECT = ${BUILDDIR}teste
@@ -13,16 +13,15 @@ IMAGE = ${PROJECT}.img
 HEXFILE = ${PROJECT}.hex
 LIST = ${PROJECT}.list
 
-PREFIXO = arm-linux-gnueabihf-
-AS = ${PREFIXO}as
-LD = ${PREFIXO}ld
-GCC = ${PREFIXO}gcc
-OBJCPY = ${PREFIXO}objcopy
-OBJDMP = ${PREFIXO}objdump
+AS = as
+LD = ld
+GCC = gcc
+OBJCPY = objcopy
+OBJDMP = objdump
 
 ASM_OPTIONS = -g
-C_OPTIONS = -march=armv7-a -mfpu=neon-vfpv4 -mtune=cortex-a7 -mfloat-abi=hard -g -Isrc/include
-LD_OPTIONS = -lc -L/usr/lib/arm-none-eabi/newlib
+C_OPTIONS = -Isrc/include -mtune=cortex-a53 -O2
+LD_OPTIONS = -lc -L/usr/lib/aarch64-linux-gnu
 
 OBJ = $(FONTES:.s=.o)
 OBJETOS = $(OBJ:.c=.o)
