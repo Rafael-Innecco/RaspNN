@@ -5,14 +5,11 @@
 #include "math_func.h"
 
 float32_t* sum_matrix(float32_t * A, float32_t* B, const int m, const int n) {
-  printf("\033[32mStarting matrix sum\033[0m\n");
   int i, j;
   float32_t * C = malloc(sizeof(float32_t)*n*m);
   int n_iter = n - n % 4;
   for(i = 0; i < m; i++) {
-    printf("\033[33mi = %d\033[0m\n", i);
     for(j = 0; j < n_iter; j = j + 4) {
-      printf("\033[33mj = %d\033[0m\n", j);
       float32x4_t a = vld1q_f32(A + n * i + j);
       float32x4_t b = vld1q_f32(B + n * i + j);
       float32x4_t c = vaddq_f32(a, b);
@@ -35,11 +32,13 @@ float32x4_t** relu_matrix(const float32x4_t** A, const int m, const int n) {
   return B;
 }
 
-float32x4_t** multiply_matrix_scalar(const float32x4_t** A, const float32_t x, const int m, const int n) {
-  float32x4_t** B = malloc(sizeof(float32x4_t)*n*m);
-  for(int i = 0; i < m; i ++)
-    for(int j = 0; j < n; j++)
+float32_t * multiply_matrix_scalar(const float32x4_t** A, const float32_t x, const int m, const int n) {
+  float32_t * B = malloc(sizeof(float32x4_t)*n*m);
+  for(int i = 0; i < m; i ++) {
+    for(int j = 0; j < n; j = j + 4) {
       B[i][j] = vmulq_n_f32(A[i][j], x);
+    }
+  }
   return B;
 }
 
