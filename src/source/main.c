@@ -13,13 +13,13 @@ int main() {
   float32_t * B = malloc(sizeof(float32_t) * 20);
   int i, j;
 
-  float16x8_t test_variable;
-  float16_t teste_2;
-
   for (i = 0; i < 4; i++) {
     for (j = 0; j < 5; j++) {
-      printf("\033[31m%d %d %f %f\033[0m\n", i, j, i + j + 1.0, i + j + 2.0);
-      A[5*i + j] = 4.0 / (i + j + 1.0);
+      if (j % 2 == 0) {
+        A[5*i + j] = - 4.0 / (i + j + 1.0);
+      } else {
+        A[5*i + j] = 4.0 / (i + j + 1.0);
+      }
       B[5*i + j] = 15.0 / (i + j + 2.0);
     }
   }
@@ -27,9 +27,14 @@ int main() {
   print_matrix(A, 4, 5);
   print_matrix(B, 4, 5);
 
+  float32_t * halfA = multiply_matrix_scalar(A, -2.85, 4, 5);
+  float32_t * reluA = relu_matrix(A, 4, 5);
   float32_t * C = sum_matrix(A, B, 4, 5);
 
+  print_matrix(halfA, 4, 5);
+  print_matrix(reluA, 4, 5);
   print_matrix(C, 4, 5);
+
   return 0;
 }
 

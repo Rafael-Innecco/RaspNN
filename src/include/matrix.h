@@ -4,19 +4,19 @@
 
 #include <arm_neon.h>
 
-float16_t * sum_matrix(float16_t* A, float16_t* B, const int m, const int n);
+float32_t * sum_matrix(float32_t* A, float32_t* B, const int m, const int n);
 
-float16_t * relu_matrix(const float16_t * A, const int m, const int n);
+float32_t * relu_matrix(const float32_t * A, const int m, const int n);
 
-float16_t * softmax_matrix(float16_t * A, int n, int m);
+float32_t * softmax_matrix(float32_t * A, int n, int m);
 
-float16_t * one_hot_matrix(float16_t** A, int n, int m);
+float32_t * one_hot_matrix(float32_t** A, int n, int m);
 
-float16_t * multiply_matrix_scalar(const float16_t * A, const float16_t x, const int m, const int n);
+float32_t * multiply_matrix_scalar(const float32_t * A, const float32_t x, const int m, const int n);
 
-float16_t * multiply_matrix_matrix(const float16_t * A, const float16_t * B, const int l,
+float32_t * multiply_matrix_matrix(const float32_t * A, const float32_t * B, const int l,
                                      const int m, const int n);
 
-float16_t matrix_redux(float16_t * A, int n, int m);
+float32_t matrix_redux(float32_t * A, int n, int m);
 
 #endif  // MATRIXNEON_H
