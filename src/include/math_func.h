@@ -10,4 +10,6 @@ float32x4_t exp32x4(float32x4_t A);
 
 float32x4_t softmax(float32x4_t A);
 
+void find_min_max(float32_t * A, float32_t * min, float32_t max);
+
 #endif // MATHFUNCNEON_H

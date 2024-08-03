@@ -4,6 +4,9 @@
 #include "matrix.h"
 #include "math_func.h"
 
+#define FLOAT_MAX 0X7F800000
+#define FLOAT_MIN 0xFF800000
+
 float32_t* sum_matrix(float32_t * A, float32_t* B, const int m, const int n) {
   int i, j;
   float32_t * C = malloc(sizeof(float32_t)*n*m);
@@ -68,14 +71,18 @@ float32_t * multiply_matrix_scalar(const float32_t*  A, const float32_t x, const
   return B;
 }
 
-float32_t * multiply_matrix_matrix(const float32_t * A, const float32_t * B, const int m,
-                                     const int l, const int n) {
-  //float32_t * C = malloc(sizeof(float32_t)*m*n);
-  //for(int i = 0; i < l; i ++)
-  //  for(int j = 0; j < m; j++) {
-  //    C[i][j] = vmovq_n_f32(0.0);
-  //    for(int k = 0; k < n; k++)
-  //      C[i][j] = vfmaq_f32(C[i][j], A[i][k],B[k][j]);
-  //  }
-  return A;
+void minmax_vector(float32_t * operand, float32_t * destination, int n) {
+  if (n < 4) {
+    // Caso base
+    float32_t min = FLOAT_MAX;
+    float32_t max = FLOAT_MIN;
+    int i;
+    for (i = 0; i < n; i++) {
+      if ()
+    }
+  }
+}
+
+float32_t * minmax_matrix(float32_t * A, int n, int m) {
+  float32_t * B = malloc(sizeof(float32_t)*n*m);
 }
