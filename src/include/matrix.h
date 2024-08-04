@@ -24,6 +24,8 @@ void minmax_vector(float32_t* operand, float32_t* destination, int n);
 
 float32_t* minmax_matrix(float32_t* A, int n, int m);
 
+float32_t* transpose_matrix(float32_t* A, int m, int n);
+
 float32_t* one_hot_matrix(float32_t** A, int n, int m);
 
 float32_t* multiply_matrix_scalar(const float32_t* A, const float32_t x,
