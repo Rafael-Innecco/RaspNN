@@ -5,33 +5,6 @@
 
 #include "matrix.h"
 
-// // Vetores de Propagação
-// float input_layer[INPUT_LAYER_SIZE*M];
-// float input_layer_weight[INPUT_LAYER_SIZE*HIDDEN_LAYER1_SIZE];
-// float input_layer_bias[HIDDEN_LAYER1_SIZE];
-
-// float hidden_layer1[HIDDEN_LAYER1_SIZE*M];
-// float hidden_layer1_weight[HIDDEN_LAYER1_SIZE*HIDDEN_LAYER2_SIZE];
-// float hidden_layer1_bias[HIDDEN_LAYER2_SIZE];
-
-// float hidden_layer2[HIDDEN_LAYER2_SIZE*M];
-// float hidden_layer2_weight[HIDDEN_LAYER2_SIZE*OUTPUT_LAYER_SIZE];
-// float hidden_layer2_bias[OUTPUT_LAYER_SIZE];
-
-// float output_layer[OUTPUT_LAYER_SIZE*M];
-
-// // Vetores de Propagação Inversa
-// float expected_layer[OUTPUT_LAYER_SIZE*M];
-
-// float diff_input_layer_weight[INPUT_LAYER_SIZE*HIDDEN_LAYER1_SIZE];
-// float diff_input_layer_bias[HIDDEN_LAYER1_SIZE];
-
-// float diff_hidden_layer1_weight[HIDDEN_LAYER1_SIZE*HIDDEN_LAYER2_SIZE];
-// float diff_hidden_layer1_bias[HIDDEN_LAYER2_SIZE];
-
-// float diff_hidden_layer2_weight[HIDDEN_LAYER2_SIZE*OUTPUT_LAYER_SIZE];
-// float diff_hidden_layer2_bias[OUTPUT_LAYER_SIZE];
-
 void random_init() {  // cria func. de incializacao aleatoria das camadas
 
   return;
@@ -72,7 +45,7 @@ void forward_propagation(float32_t* input_layer, float32_t* input_layer_weight,
   Z2 =
       sum_matrix(Z1, hidden_layer2_bias, OUTPUT_LAYER_SIZE, m);  // Z2 = W*A + B
   output_layer =
-      softmax_matrix(Z2, OUTPUT_LAYER_SIZE, m);  // Output = softmax(W*A + B);
+      minmax_matrix(Z2, OUTPUT_LAYER_SIZE, m);  // Output = softmax(W*A + B);
   free(Z1);
   free(Z2);
   return;
