@@ -31,6 +31,9 @@ all: ${EXEC} ${IMAGE} ${LIST} ${HEXFILE}
 compile:
 	gcc -Isrc/include -O2 -g ${FONTE}*.c -o test.out
 
+run: compile
+	./test.out
+
 # Criar diretório build
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)

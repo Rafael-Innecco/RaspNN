@@ -101,7 +101,7 @@ float32_t* relu_derivate_matrix(const float32_t* A, const int m, const int n) {
 
     while (j < n) {
       if (A[n * i + j] > 0) {
-        B[n * i + j] = A[n * i + j];
+        B[n * i + j] = 1;
       } else {
         B[n * i + j] = 0;
       }
@@ -182,12 +182,12 @@ void minmax_vector_fast(float32_t* A, const int n) {
   minmax_vector_fast(A, m);
 }
 
+// Ainda com problemas
 float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
   float32_t* C;
   float32_t* A_T = transpose_matrix(A, m, n);
-  float32_t* vec = malloc(sizeof(float32_t) * m * 2);
-  ;
+  float32_t* vec = malloc(sizeof(float32_t) * n);
   int i, j;
   int m_iter = m - m % 4;
   for (i = 0; i < n; i++) {
@@ -230,7 +230,7 @@ float32_t* one_hot_matrix(const int* A, const int m, const int n) {
   float32_t* B = init_matrix(0.0, m, n);
   // Nada a ser paralelizado
   for (int i = 0; i < n; i++) {
-    B[m * A[i] + i] = 1.0;
+    B[n * A[i] + i] = 1.0;
   }
 }
 
