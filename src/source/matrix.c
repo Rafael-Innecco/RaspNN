@@ -8,105 +8,91 @@
 
 float32_t* init_matrix(const float32_t x, const int m, const int n) {
   float32_t* A = malloc(sizeof(float32_t) * n * m);
-  int i, j;
-  int n_iter = n - n % 4;
-  float32x4_t zeros = vmovq_n_f32(0);
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      vst1q_f32(A + n * i + j, zeros);
-    }
+  int i;
+  int iter = (n * m) - ((n * m) % 4);
+  float32x4_t init_value = vmovq_n_f32(x);
+  for (i = 0; i < iter; i += 4) {
+    vst1q_f32(A + i, init_value);
+  }
 
-    while (j < n) {
-      A[n * i + j] = 0.0;
-      j++;
-    }
+  while (i < n * m) {
+    A[i] = 0.0;
+    i++;
   }
   return A;
 }
 
 float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
                       const int n) {
-  int i, j;
+  int i;
   float32_t* C = malloc(sizeof(float32_t) * n * m);
-  int n_iter = n - n % 4;
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      float32x4_t a = vld1q_f32(A + n * i + j);
-      float32x4_t b = vld1q_f32(B + n * i + j);
-      float32x4_t c = vaddq_f32(a, b);
-      vst1q_f32(C + n * i + j, c);
-    }
-
-    while (j < n) {
-      C[n * i + j] = A[n * i + j] + B[n * i + j];
-      j++;
-    }
+  int iter = (n * m) - ((n * m) % 4);
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    float32x4_t b = vld1q_f32(B + i);
+    float32x4_t c = vaddq_f32(a, b);
+    vst1q_f32(C + i, c);
   }
+
   return C;
 }
 
 float32_t* diff_matrix(const float32_t* A, const float32_t* B, const int m,
                        const int n) {
-  int i, j;
+  int i;
   float32_t* C = malloc(sizeof(float32_t) * n * m);
-  int n_iter = n - n % 4;
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      float32x4_t a = vld1q_f32(A + n * i + j);
-      float32x4_t b = vld1q_f32(B + n * i + j);
-      float32x4_t c = vsubq_f32(a, b);
-      vst1q_f32(C + n * i + j, c);
-    }
+  int iter = (n * m) - ((n * m) % 4);
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    float32x4_t b = vld1q_f32(B + i);
+    float32x4_t c = vsubq_f32(a, b);
+    vst1q_f32(C + i, c);
+  }
 
-    while (j < n) {
-      C[n * i + j] = A[n * i + j] - B[n * i + j];
-      j++;
-    }
+  while (i < n * m) {
+    C[i] = A[i] - B[i];
+    i++;
   }
   return C;
 }
 
 float32_t* relu_matrix(const float32_t* A, const int m, const int n) {
-  int i, j;
+  int i;
   float32_t* B = malloc(sizeof(float32_t) * m * n);
-  int n_iter = n - n % 4;
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      float32x4_t b = relu(vld1q_f32(A + n * i + j));
-      vst1q_f32(B + n * i + j, b);
-    }
+  int iter = (n * m) - ((n * m) % 4);
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t b = relu(vld1q_f32(A + i));
+    vst1q_f32(B + i, b);
+  }
 
-    while (j < n) {
-      if (A[n * i + j] > 0) {
-        B[n * i + j] = A[n * i + j];
-      } else {
-        B[n * i + j] = 0;
-      }
-      j++;
+  while (i < n * m) {
+    if (A[i] > 0) {
+      B[i] = A[i];
+    } else {
+      B[i] = 0;
     }
+    i++;
   }
 
   return B;
 }
 
 float32_t* relu_derivate_matrix(const float32_t* A, const int m, const int n) {
-  int i, j;
+  int i;
   float32_t* B = malloc(sizeof(float32_t) * m * n);
-  int n_iter = n - n % 4;
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      float32x4_t b = relu_derivate(vld1q_f32(A + n * i + j));
-      vst1q_f32(B + n * i + j, b);
-    }
+  int iter = (n * m) - ((n * m) % 4);
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t b = relu_derivate(vld1q_f32(A + i));
+    vst1q_f32(B + i, b);
+  }
 
-    while (j < n) {
-      if (A[n * i + j] > 0) {
-        B[n * i + j] = 1;
-      } else {
-        B[n * i + j] = 0;
-      }
-      j++;
+  while (i < n * m) {
+    if (A[i] > 0) {
+      B[i] = 1;
+    } else {
+      B[i] = 0;
     }
+    i++;
   }
 
   return B;
@@ -115,19 +101,17 @@ float32_t* relu_derivate_matrix(const float32_t* A, const int m, const int n) {
 float32_t* multiply_matrix_scalar(const float32_t* A, const float32_t x,
                                   const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
-  int n_iter = n - n % 4;
-  int i, j;
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      float32x4_t a = vld1q_f32(A + n * i + j);
-      float32x4_t b = vmulq_n_f32(a, x);
-      vst1q_f32(B + n * i + j, b);
-    }
+  int iter = (n * m) - ((n * m) % 4);
+  int i;
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    float32x4_t b = vmulq_n_f32(a, x);
+    vst1q_f32(B + i, b);
+  }
 
-    while (j < n) {
-      B[n * i + j] = x * A[n * i + j];
-      j++;
-    }
+  while (i < n * m) {
+    B[i] = x * A[i];
+    i++;
   }
   return B;
 }
@@ -135,20 +119,18 @@ float32_t* multiply_matrix_scalar(const float32_t* A, const float32_t x,
 void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
                                      const float32_t x, const int m,
                                      const int n) {
-  int i, j;
-  int n_iter = n - n % 4;
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n_iter; j = j + 4) {
-      float32x4_t a = vld1q_f32(A + n * i + j);
-      float32x4_t b = vld1q_f32(B + n * i + j);
-      float32x4_t c = vmlaq_n_f32(a, b, x);
-      vst1q_f32(A + n * i + j, c);
-    }
+  int i;
+  int iter = (n * m) - ((n * m) % 4);
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    float32x4_t b = vld1q_f32(B + i);
+    float32x4_t c = vmlaq_n_f32(a, b, x);
+    vst1q_f32(A + i, c);
+  }
 
-    while (j < n) {
-      A[n * i + j] = A[n * i + j] + x * B[n * i + j];
-      j++;
-    }
+  while (i < n * m) {
+    A[i] = A[i] + x * B[i];
+    i++;
   }
   return;
 }
@@ -357,7 +339,7 @@ float32_t* compare_vector(const float32_t* A, const float32_t* B, const int n) {
   for (j = 0; j < n_iter; j = j + 4) {
     float32x4_t a = vld1q_f32(A + i);
     float32x4_t b = vld1q_f32(B + i);
-    // Checar o compilador
+    // Checar o compilado
     float32x4_t equal = vbslq_f32(vceqq_f32(a, b), ones, zeros);
     vst1q_f32(compare + j, equal);
   }

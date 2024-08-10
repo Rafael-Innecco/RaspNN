@@ -8,26 +8,18 @@
 
 float32_t* init_matrix(const float32_t x, const int m, const int n);
 
-// Tested
-/***
- *
- ***/
 float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
                       const int n);
 
-// Tested
 float32_t* diff_matrix(const float32_t* A, const float32_t* B, const int m,
                        const int n);
 
-// Tested
 void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
                                      const float32_t x, const int m,
                                      const int n);
 
-// Tested
 float32_t* relu_matrix(const float32_t* A, const int m, const int n);
 
-// Tested
 float32_t* relu_derivate_matrix(const float32_t* A, const int m, const int n);
 
 void max_vector_fast(float32_t* A, const int n);
@@ -44,7 +36,6 @@ float32_t* transpose_matrix(const float32_t* A, const int m, const int n);
 // Tested
 float32_t* one_hot_matrix(const int* A, const int m, const int n);
 
-// Tested
 float32_t* multiply_matrix_scalar(const float32_t* A, const float32_t x,
                                   const int m, const int n);
 
