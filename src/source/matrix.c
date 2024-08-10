@@ -153,49 +153,67 @@ void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
   return;
 }
 
-void minmax_vector_fast(float32_t* A, const int n) {
-  float32_t min = FLOAT_MAX;
+void max_vector_fast(float32_t* A, const int n) {
   float32_t max = FLOAT_MIN;
+  int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
+  int n_iter = n - n % 8;
+  int i;
+  for (i = 0; i < n_iter; i += 8) {
+    float32x4_t a_max = vld1q_f32(A + i);
+    float32x4_t b_max = vld1q_f32(A + i + 4);
+    float32x4_t max_vector = vmaxq_f32(a_max, b_max);
+    vst1q_f32(A + m + (i >> 1), max_vector);
+  }
+  if (n % 8) {
+    while (i < n) {
+      if (A[i] > max) max = A[i];
+      i++;
+    }
+    A[m - 1] = max;
+    if (n < 8) return;
+  }
+  max_vector_fast(A, m);
+}
+
+void min_vector_fast(float32_t* A, const int n) {
+  float32_t min = FLOAT_MAX;
   int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
   int n_iter = n - n % 8;
   int i;
   for (i = 0; i < n_iter; i += 8) {
     float32x4_t a_min = vld1q_f32(A + i);
     float32x4_t b_min = vld1q_f32(A + i + 4);
-    float32x4_t a_max = vld1q_f32(A + n + i);
-    float32x4_t b_max = vld1q_f32(A + n + i + 4);
     float32x4_t min_vector = vminq_f32(a_min, b_min);
-    float32x4_t max_vector = vmaxq_f32(a_max, b_max);
     vst1q_f32(A + (i >> 1), min_vector);
-    vst1q_f32(A + m + (i >> 1), max_vector);
   }
   if (n % 8) {
     while (i < n) {
       if (A[i] < min) min = A[i];
-      if (A[n + i] > max) max = A[n + i];
       i++;
     }
     A[m - 1] = min;
-    A[2 * m - 1] = max;
     if (n < 8) return;
   }
-  minmax_vector_fast(A, m);
+  min_vector_fast(A, m);
 }
 
-// Ainda com problemas
 float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
   float32_t* C;
   float32_t* A_T = transpose_matrix(A, m, n);
-  float32_t* vec = malloc(sizeof(float32_t) * n);
+  float32_t* vec = malloc(sizeof(float32_t) * m * 2);
+  float32_t min, max;
   int i, j;
   int m_iter = m - m % 4;
   for (i = 0; i < n; i++) {
     copy_vector(A_T + m * i, vec, m);
+    min_vector_fast(vec, m);
+    min = vec[0];
     copy_vector(A_T + m * i, vec + m, m);
-    minmax_vector_fast(vec, m);
-    float32_t inverse_interval = 1 / (vec[1] - vec[0]);
-    float32_t min_normalized = -vec[0] / (vec[1] - vec[0]);
+    max_vector_fast(vec, m);
+    max = vec[0];
+    float32_t inverse_interval = 1 / (max - min);
+    float32_t min_normalized = -min / (max - min);
     float32x4_t min_normalized_vec = vmovq_n_f32(min_normalized);
     for (j = 0; j < m_iter; j += 4) {
       float32x4_t a = vld1q_f32(A_T + m * i + j);
@@ -328,4 +346,55 @@ float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
     }
   }
   return C;
+}
+
+float32_t* compare_vector(const float32_t* A, const float32_t* B, const int n) {
+  float32_t* compare = malloc(sizeof(float32_t) * n);
+  int i, j;
+  int n_iter = n - n % 4;
+  float32x4_t zeros = vmovq_n_f32(0);
+  float32x4_t ones = vmovq_n_f32(1);
+  for (j = 0; j < n_iter; j = j + 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    float32x4_t b = vld1q_f32(B + i);
+    // Checar o compilador
+    float32x4_t equal = vbslq_f32(vceqq_f32(a, b), ones, zeros);
+    vst1q_f32(compare + j, equal);
+  }
+
+  while (j < n) {
+    compare[j] = (A[j] == B[j]);
+    j++;
+  }
+
+  return compare;
+}
+
+float32_t* matrix_redux(const float32_t* A, const int m, const int n) {
+  int i, j;
+  float32_t* B = malloc(sizeof(float32_t) * n);
+  float32x4_t sum;
+  float32_t result;
+  int n_iter = n - n % 4;
+  for (i = 0; i < m; i++) {
+    sum = vmovq_n_f32(0.0);
+    result = 0.0;
+    for (j = 0; j < n_iter; j += 4) {
+      float32x4_t a = vld1q_f32(A + n * i + j);
+      sum = vaddq_f32(a, sum);
+    }
+
+    while (j < n) {
+      result += A[n * i + j];
+      j++;
+    }
+
+    result += vgetq_lane_f32(sum, 0);
+    result += vgetq_lane_f32(sum, 1);
+    result += vgetq_lane_f32(sum, 2);
+    result += vgetq_lane_f32(sum, 3);
+
+    B[m * i + j] = result;
+  }
+  return B;
 }
