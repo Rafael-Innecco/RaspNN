@@ -196,7 +196,7 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
   float32_t* C;
   float32_t* A_T = transpose_matrix(A, m, n);
-  float32_t* vec = malloc(sizeof(float32_t) * m * 2);
+  float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
   int i, j;
   int m_iter = m - m % 4;
