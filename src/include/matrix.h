@@ -8,6 +8,8 @@
 
 float32_t* init_matrix(const float32_t x, const int m, const int n);
 
+float32_t* init_matrix_random(const int m, const int n);
+
 float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
                       const int n);
 
@@ -43,8 +45,10 @@ float32_t* multiply_matrix_scalar(const float32_t* A, const float32_t x,
 float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
                                   const int m, const int l, const int n);
 
-float32_t* compare_vector(const float32_t* A, const float32_t* B, const int n);
+int* compare_vector(const int* A, const int* B, const int n);
 
-float32_t* matrix_redux(const float32_t* A, const int n, const int m);
+float32_t* matrix_redux_float(const float32_t* A, const int n, const int m);
+
+int* matrix_redux_int(const int* A, const int n, const int m);
 
 #endif  // MATRIXNEON_H

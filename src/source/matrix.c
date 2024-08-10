@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "math_func.h"
 
@@ -18,6 +19,18 @@ float32_t* init_matrix(const float32_t x, const int m, const int n) {
   while (i < n * m) {
     A[i] = 0.0;
     i++;
+  }
+  return A;
+}
+
+float32_t* init_matrix_random(const int m, const int n) {
+  float32_t* A = malloc(sizeof(float32_t) * n * m);
+
+  srand(time(NULL));  // Semente aleatoria
+
+  // Nada a ser paralelizado
+  for (int i = 0; i < n * m; i++) {
+    A[i] = (float)rand() / (float)RAND_MAX;
   }
   return A;
 }
@@ -330,18 +343,18 @@ float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
   return C;
 }
 
-float32_t* compare_vector(const float32_t* A, const float32_t* B, const int n) {
-  float32_t* compare = malloc(sizeof(float32_t) * n);
+int* compare_vector(const int* A, const int* B, const int n) {
+  int* compare = malloc(sizeof(int) * n);
   int i, j;
   int n_iter = n - n % 4;
-  float32x4_t zeros = vmovq_n_f32(0);
-  float32x4_t ones = vmovq_n_f32(1);
-  for (j = 0; j < n_iter; j = j + 4) {
-    float32x4_t a = vld1q_f32(A + i);
-    float32x4_t b = vld1q_f32(B + i);
+  int32x4_t zeros = vmovq_n_s32(0);
+  int32x4_t ones = vmovq_n_s32(1);
+  for (j = 0; j < n_iter; j += 4) {
+    int32x4_t a = vld1q_s32(A + i);
+    int32x4_t b = vld1q_s32(B + i);
     // Checar o compilado
-    float32x4_t equal = vbslq_f32(vceqq_f32(a, b), ones, zeros);
-    vst1q_f32(compare + j, equal);
+    int32x4_t equal = vbslq_s32(vceqq_s32(a, b), ones, zeros);
+    vst1q_s32(compare + j, equal);
   }
 
   while (j < n) {
@@ -352,7 +365,7 @@ float32_t* compare_vector(const float32_t* A, const float32_t* B, const int n) {
   return compare;
 }
 
-float32_t* matrix_redux(const float32_t* A, const int m, const int n) {
+float32_t* matrix_redux_float(const float32_t* A, const int m, const int n) {
   int i, j;
   float32_t* B = malloc(sizeof(float32_t) * n);
   float32x4_t sum;
@@ -375,6 +388,35 @@ float32_t* matrix_redux(const float32_t* A, const int m, const int n) {
     result += vgetq_lane_f32(sum, 1);
     result += vgetq_lane_f32(sum, 2);
     result += vgetq_lane_f32(sum, 3);
+
+    B[m * i + j] = result;
+  }
+  return B;
+}
+
+int* matrix_redux_int(const int* A, const int m, const int n) {
+  int i, j;
+  int* B = malloc(sizeof(int) * n);
+  int32x4_t sum;
+  int result;
+  int n_iter = n - n % 4;
+  for (i = 0; i < m; i++) {
+    sum = vmovq_n_s32(0);
+    result = 0.0;
+    for (j = 0; j < n_iter; j += 4) {
+      int32x4_t a = vld1q_s32(A + n * i + j);
+      sum = vaddq_s32(a, sum);
+    }
+
+    while (j < n) {
+      result += A[n * i + j];
+      j++;
+    }
+
+    result += vgetq_lane_s32(sum, 0);
+    result += vgetq_lane_s32(sum, 1);
+    result += vgetq_lane_s32(sum, 2);
+    result += vgetq_lane_s32(sum, 3);
 
     B[m * i + j] = result;
   }

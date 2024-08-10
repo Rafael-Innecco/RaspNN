@@ -5,8 +5,19 @@
 
 #include "matrix.h"
 
-void random_init() {  // cria func. de incializacao aleatoria das camadas
-
+void random_params(float32_t* input_layer_weight, float32_t* input_layer_bias,
+                   float32_t* hidden_layer1_weight,
+                   float32_t* hidden_layer1_bias,
+                   float32_t* hidden_layer2_weight,
+                   float32_t* hidden_layer2_bias) {
+  input_layer_weight = init_matrix_random(HIDDEN_LAYER1_SIZE, INPUT_LAYER_SIZE);
+  input_layer_bias = init_matrix_random(HIDDEN_LAYER1_SIZE, 1);
+  hidden_layer1_weight =
+      init_matrix_random(HIDDEN_LAYER2_SIZE, HIDDEN_LAYER1_SIZE);
+  hidden_layer1_bias = init_matrix_random(HIDDEN_LAYER2_SIZE, 1);
+  hidden_layer2_weight =
+      init_matrix_random(OUTPUT_LAYER_SIZE, HIDDEN_LAYER2_SIZE);
+  hidden_layer2_bias = init_matrix_random(OUTPUT_LAYER_SIZE, 1);
   return;
 }
 
@@ -99,7 +110,7 @@ void backward_propagation(
   hidden_layer2_weight_diff = multiply_matrix_scalar(
       temp, 1 / m, OUTPUT_LAYER_SIZE, HIDDEN_LAYER2_SIZE);
   free(temp);
-  temp = matrix_redux(dZ3, OUTPUT_LAYER_SIZE, m);
+  temp = matrix_redux_float(dZ3, OUTPUT_LAYER_SIZE, m);
   hidden_layer2_bias_diff =
       multiply_matrix_scalar(temp, 1 / m, OUTPUT_LAYER_SIZE, 1);
   free(temp);
@@ -108,7 +119,7 @@ void backward_propagation(
   hidden_layer1_weight_diff = multiply_matrix_scalar(
       temp, 1 / m, HIDDEN_LAYER2_SIZE, HIDDEN_LAYER1_SIZE);
   free(temp);
-  temp = matrix_redux(dZ2, HIDDEN_LAYER2_SIZE, m);
+  temp = matrix_redux_float(dZ2, HIDDEN_LAYER2_SIZE, m);
   hidden_layer1_bias_diff =
       multiply_matrix_scalar(temp, 1 / m, HIDDEN_LAYER2_SIZE, 1);
   free(temp);
@@ -117,7 +128,7 @@ void backward_propagation(
   input_layer_weight_diff =
       multiply_matrix_scalar(temp, 1 / m, INPUT_LAYER_SIZE, HIDDEN_LAYER1_SIZE);
   free(temp);
-  temp = matrix_redux(dZ1, INPUT_LAYER_SIZE, m);
+  temp = matrix_redux_float(dZ1, INPUT_LAYER_SIZE, m);
   input_layer_bias_diff =
       multiply_matrix_scalar(temp, 1 / m, INPUT_LAYER_SIZE, 1);
   free(temp);
@@ -155,8 +166,56 @@ void parameter_update(
   return;
 }
 
-float32_t* get_predictions(const float32_t* output_layer, int m) {
-  float32_t* predictions = malloc(sizeof(float32_t) * m);
+void train_network(float32_t* train_set, const int* expected_output,
+                   float32_t* input_layer_weight, float32_t* input_layer_bias,
+                   float32_t* hidden_layer1_weight,
+                   float32_t* hidden_layer1_bias,
+                   float32_t* hidden_layer2_weight,
+                   float32_t* hidden_layer2_bias, const int train_set_size,
+                   const int iterations) {
+  random_params(input_layer_weight, input_layer_weight, hidden_layer1_weight,
+                hidden_layer1_bias, hidden_layer2_weight, hidden_layer2_bias);
+  float32_t* expected_output_one_hot =
+      one_hot_matrix(expected_output, OUTPUT_LAYER_SIZE, train_set_size);
+  float32_t *hidden_layer1, *hidden_layer2, *output_layer;
+  float32_t *input_layer_pre_activation, *hidden_layer1_pre_activation,
+      *hidden_layer2_pre_activation;
+  float32_t *input_layer_weight_diff, *hidden_layer1_weight_diff,
+      *hidden_layer2_weight_diff;
+  float32_t *input_layer_bias_diff, *hidden_layer1_bias_diff,
+      *hidden_layer2_bias_diff;
+  for (int i = 0; i < iterations; i++) {
+    forward_propagation(
+        train_set, input_layer_weight, input_layer_bias,
+        input_layer_pre_activation, hidden_layer1, hidden_layer1_weight,
+        hidden_layer1_bias, hidden_layer1_pre_activation, hidden_layer2,
+        hidden_layer2_weight, hidden_layer2_bias, hidden_layer2_pre_activation,
+        output_layer, train_set_size);
+    backward_propagation(train_set, input_layer_weight, input_layer_weight_diff,
+                         input_layer_bias_diff, input_layer_pre_activation,
+                         hidden_layer1, hidden_layer1_weight,
+                         hidden_layer1_weight_diff, hidden_layer1_bias_diff,
+                         hidden_layer1_pre_activation, hidden_layer2,
+                         hidden_layer2_weight, hidden_layer2_weight_diff,
+                         hidden_layer2_bias_diff, output_layer,
+                         expected_output_one_hot, train_set_size);
+    parameter_update(
+        input_layer_weight, input_layer_weight_diff, input_layer_bias,
+        input_layer_bias_diff, hidden_layer1_weight, hidden_layer1_weight_diff,
+        hidden_layer1_bias, hidden_layer1_bias_diff, hidden_layer2_weight,
+        hidden_layer2_weight_diff, hidden_layer2_bias, hidden_layer2_bias_diff);
+    if (i % 10 == 0) {
+      printf("Iteration: %d\n", i);
+      int* predictions = get_predictions(output_layer, train_set_size);
+      printf("Accuracy: %f",
+             get_accuracy(predictions, expected_output, train_set_size));
+    }
+  }
+  return;
+}
+
+int* get_predictions(const float32_t* output_layer, int m) {
+  int* predictions = malloc(sizeof(float32_t) * m);
   float32_t* output_layer_transposted =
       transpose_matrix(output_layer, OUTPUT_LAYER_SIZE, m);
   float32_t* vec;
@@ -164,14 +223,14 @@ float32_t* get_predictions(const float32_t* output_layer, int m) {
     copy_vector(vec, output_layer_transposted + OUTPUT_LAYER_SIZE * i,
                 OUTPUT_LAYER_SIZE);
     max_vector_fast(vec, OUTPUT_LAYER_SIZE);
-    predictions[i] = vec[0];
+    predictions[i] = (int)vec[0];
   }
   return predictions;
 }
 
-float32_t get_accuracy(float32_t* predictions, float32_t* expected, int m) {
-  float32_t* accuracy;
-  float32_t* compare = compare_vector(predictions, expected, m);
-  accuracy = matrix_redux(compare, 1, m);
+float32_t get_accuracy(const int* predictions, const int* expected, int m) {
+  int* accuracy;
+  int* compare = compare_vector(predictions, expected, m);
+  accuracy = matrix_redux_int(compare, 1, m);
   return (*accuracy) / m;
 }
