@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "neural_network.h"
+#include "uart.h"
 #include "uart_fsm.h"
 
 int main2() {

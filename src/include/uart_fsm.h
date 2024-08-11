@@ -18,10 +18,6 @@
 #define TRAIN 1
 #define INFER 2
 
-int uart_init(void);
-
-void end_uart(int handler);
-
 int next_state(int state, int mode);
 
 int action(int state, int handler, int* result, int result_size,

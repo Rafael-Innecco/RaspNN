@@ -256,9 +256,9 @@ int* inference(float32_t* input_layer, float32_t* input_layer_weight,
                float32_t* input_layer_bias, float32_t* hidden_layer1_weight,
                float32_t* hidden_layer1_bias, float32_t* hidden_layer2_weight,
                float32_t* hidden_layer2_bias, const int inference_set_size) {
-  float32_t *hidden_layer1, hidden_layer2, output_layer;
-  float32_t *input_layer_pre_activation, hidden_layer1_pre_activation,
-      hidden_layer2_pre_activation;
+  float32_t *hidden_layer1, *hidden_layer2, *output_layer;
+  float32_t *input_layer_pre_activation, *hidden_layer1_pre_activation,
+      *hidden_layer2_pre_activation;
   int* predictions;
   forward_propagation(
       input_layer, input_layer_weight, input_layer_bias,
