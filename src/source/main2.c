@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "client_fsm.h"
 #include "neural_network.h"
+#include "server_fsm.h"
 #include "socket_wrapper.h"
 
 int main2() {
@@ -16,14 +16,15 @@ int main2() {
   int data_set_size, iterations;
 
   // UART Variables
-  int state, handler, mode, action_result;
-
-  handler = socket_connect(HOST_IP, HOST_PORT);
-  state = IDLE;
+  int state, sock, mode, action_result, server_fd;
 
   while (1) {
-    action_result = action(state, handler, result, data_set_size, data_set);
+    action_result = action(state, sock, result, data_set_size, data_set);
     switch (state) {
+      case INIT:
+        sock = action_result;
+        server_fd = *result;
+        break;
       case IDLE:
         mode = action_result;
         break;
@@ -54,6 +55,10 @@ int main2() {
         free(data_set);
       case SEND_INFERENCE_RESULT:
         free(result);
+        break;
+      case END_CONNECTION:
+        break;
+      default:
     }
     state = next_state(state, mode);
   }

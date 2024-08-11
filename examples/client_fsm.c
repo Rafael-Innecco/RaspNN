@@ -1,21 +1,18 @@
 // C library headers
-#include "server_fsm.h"
+#include "client_fsm.h"
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "client_fsm.h"
+#include "server_fsm.h"
 #include "socket_wrapper.h"
 
 int main() {
   int sock = -1;
-  int server_handler;
   // Init
-  while (sock == -1) {
-    sock = socket_listen(HOST_PORT, &server_handler);
-  }
+  sock = socket_connect(SERVER_IP, SERVER_PORT);
 
   // Train
   // Set Train Mode
@@ -54,6 +51,8 @@ int main() {
   int accuracy;
   socket_read(sock, (char*)&accuracy, sizeof(int) / sizeof(char));
   printf("Training Accuracy: %d", accuracy);
+
+  // Inference
   // Send Inference Data Set Size
   data_set_size = INFERENCE_DATA_SET_SIZE;
   socket_write(sock, (char*)&data_set_size, sizeof(int) / sizeof(char));
@@ -90,5 +89,4 @@ int main() {
   free(file_data);
   // Close
   socket_close(sock);
-  socket_close(server_handler);
 };
