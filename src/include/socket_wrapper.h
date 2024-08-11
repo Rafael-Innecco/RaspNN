@@ -6,9 +6,12 @@
 #include <unistd.h>
 
 #define MTU 1024
-#define PORT 8080
+#define HOST_IP "192.168.0.0"
+#define HOST_PORT 8080
 
-int socket_init(void);
+int socket_connect(char* ip, int port);
+
+int socket_listen(int port, int* handler);
 
 void socket_read(int sock, char* buf, ssize_t size);
 

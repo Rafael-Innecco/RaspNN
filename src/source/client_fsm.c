@@ -1,9 +1,9 @@
 
 #include "client_fsm.h"
 
+#include <arm_neon.h>
 #include <stdlib.h>
 
-#include "neural_network.h"
 #include "socket_wrapper.h"
 
 int next_state(int state, int mode) {
@@ -44,19 +44,19 @@ int action(int state, int handler, int* result, int result_size,
       // Obter o tamanho do data set
       socket_read(handler, (char*)&data_size, sizeof(int) / sizeof(char));
       // Obter o data set
-      message = malloc((sizeof(char) * data_size * INPUT_LAYER_SIZE));
-      socket_read(handler, message, data_size * INPUT_LAYER_SIZE);
-      data = malloc((sizeof(float32_t) * data_size * INPUT_LAYER_SIZE));
-      for (int i = 0; i < data_size * INPUT_LAYER_SIZE; i++) {
+      message = malloc((sizeof(char) * data_size * IMAGE_SIZE));
+      socket_read(handler, message, data_size * IMAGE_SIZE);
+      data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
+      for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
         data[i] = (float32_t)message[i];
       }
       free(message);
       return data_size;
     case WAIT_TRAIN_RESULT:
-      message = malloc((sizeof(char) * data_size * INPUT_LAYER_SIZE));
-      socket_read(handler, message, data_size * INPUT_LAYER_SIZE);
-      result = malloc(sizeof(int) * data_size * INPUT_LAYER_SIZE);
-      for (int i = 0; i < data_size * INPUT_LAYER_SIZE; i++) {
+      message = malloc((sizeof(char) * data_size * IMAGE_SIZE));
+      socket_read(handler, message, data_size * IMAGE_SIZE);
+      result = malloc(sizeof(int) * data_size * IMAGE_SIZE);
+      for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
         result[i] = (int)message[i];
       }
       free(message);
@@ -71,10 +71,10 @@ int action(int state, int handler, int* result, int result_size,
       // Obter o tamanho do data set
       socket_read(handler, (char*)&data_size, sizeof(int) / sizeof(char));
       // Obter o data set
-      message = malloc((sizeof(char) * data_size * INPUT_LAYER_SIZE));
-      socket_read(handler, message, data_size * INPUT_LAYER_SIZE);
-      data = malloc((sizeof(float32_t) * data_size * INPUT_LAYER_SIZE));
-      for (int i = 0; i < data_size * INPUT_LAYER_SIZE; i++) {
+      message = malloc((sizeof(char) * data_size * IMAGE_SIZE));
+      socket_read(handler, message, data_size * IMAGE_SIZE);
+      data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
+      for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
         data[i] = (float32_t)message[i];
       }
       free(message);
@@ -82,7 +82,7 @@ int action(int state, int handler, int* result, int result_size,
     case SEND_INFERENCE_RESULT:
       message = malloc(sizeof(char) * result_size);
       for (int i = 0; i < result_size; i++) {
-        message[i] = (char)result[i] + 0x30;
+        message[i] = (char)result[i];
       }
       socket_write(handler, message, result_size);
       free(message);

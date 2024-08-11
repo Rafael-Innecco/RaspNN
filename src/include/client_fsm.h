@@ -18,6 +18,8 @@
 #define TRAIN 1
 #define INFER 2
 
+#define IMAGE_SIZE 784
+
 int next_state(int state, int mode);
 
 int action(int state, int handler, int* result, int result_size,

@@ -18,7 +18,7 @@ int main2() {
   // UART Variables
   int state, handler, mode, action_result;
 
-  handler = socket_init();
+  handler = socket_connect(HOST_IP, HOST_PORT);
   state = IDLE;
 
   while (1) {
