@@ -6,14 +6,15 @@
 
 // FSM States
 #define INIT 0
-#define IDLE 1
-#define WAIT_TRAIN_DATA 2
-#define WAIT_TRAIN_RESULT 3
-#define WAIT_TRAIN_ITERATIONS 4
-#define SEND_TRAINING_RESULT 5
-#define WAIT_INFERENCE_DATA 6
-#define SEND_INFERENCE_RESULT 7
-#define END_CONNECTION 8
+#define LISTEN 1
+#define IDLE 2
+#define WAIT_TRAIN_DATA 3
+#define WAIT_TRAIN_LABELS 4
+#define WAIT_TRAIN_ITERATIONS 5
+#define SEND_TRAINING_RESULT 6
+#define WAIT_INFERENCE_DATA 7
+#define SEND_INFERENCE_RESULT 8
+#define END_CONNECTION 9
 
 // FSM Modes
 #define NONE 0
@@ -28,7 +29,6 @@
 
 int next_state(int state, int mode);
 
-int action(int state, int handler, int* result, int result_size,
-           float32_t* data);
+int action(int state, int handler, int* result, int size, float32_t** data);
 
 #endif  // SERVERFSM_H

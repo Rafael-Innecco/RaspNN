@@ -1,23 +1,30 @@
 
 #include "server_fsm.h"
 
-#include <arm_neon.h>
 #include <stdlib.h>
 
 #include "socket_wrapper.h"
 
+static struct sockaddr_in address;
+
 int next_state(int state, int mode) {
   switch (state) {
     case INIT:
+      return LISTEN;
+    case LISTEN:
       return IDLE;
     case IDLE:
       if (mode == TRAIN)
         return WAIT_TRAIN_DATA;
       else if (mode == INFER)
         return WAIT_INFERENCE_DATA;
+      else if (mode == CLOSE)
+        return END_CONNECTION;
+      else
+        return IDLE;
     case WAIT_TRAIN_DATA:
-      return WAIT_TRAIN_DATA;
-    case WAIT_TRAIN_RESULT:
+      return WAIT_TRAIN_LABELS;
+    case WAIT_TRAIN_LABELS:
       return WAIT_TRAIN_ITERATIONS;
     case WAIT_TRAIN_ITERATIONS:
       return SEND_TRAINING_RESULT;
@@ -28,44 +35,45 @@ int next_state(int state, int mode) {
     case SEND_INFERENCE_RESULT:
       return IDLE;
     case END_CONNECTION:
-      return INIT;
+      return LISTEN;
     default:
       return IDLE;
   }
 }
 
-int action(int state, int sock, int* result, int result_size, float32_t* data) {
+int action(int state, int sock, int* result, int size, float32_t** data) {
   int data_size;
   char* message;
   switch (state) {
     case INIT:
+      int server_fd = -1;
+      server_fd = socket_server_init(SERVER_PORT, &address);
+      return server_fd;
+    case LISTEN:
       int sock_ = -1;
-      while (sock_ == -1) {
-        sock_ = socket_listen(SERVER_PORT, result);
-      }
+      while (sock_ == -1) sock_ = socket_listen(SERVER_PORT, *result, &address);
       return sock_;
     case IDLE:
-      int mode = 0;
-      socket_read(sock, (char*)&mode, sizeof(char));
-      if (mode != TRAIN || mode != INFER || mode != CLOSE) return NONE;
-      return mode;
+      char mode;
+      socket_read(sock, &mode, sizeof(char));
+      if (mode != TRAIN && mode != INFER && mode != CLOSE) return NONE;
+      return (int)mode;
     case WAIT_TRAIN_DATA:
       // Obter o tamanho do data set
       socket_read(sock, (char*)&data_size, sizeof(int) / sizeof(char));
       // Obter o data set
       message = malloc((sizeof(char) * data_size * IMAGE_SIZE));
       socket_read(sock, message, data_size * IMAGE_SIZE);
-      data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
+      *data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
       for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
-        data[i] = (float32_t)message[i];
+        (*data)[i] = (float32_t)message[i];
       }
       free(message);
       return data_size;
-    case WAIT_TRAIN_RESULT:
-      message = malloc((sizeof(char) * data_size * IMAGE_SIZE));
-      socket_read(sock, message, data_size * IMAGE_SIZE);
-      result = malloc(sizeof(int) * data_size * IMAGE_SIZE);
-      for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
+    case WAIT_TRAIN_LABELS:
+      message = malloc((sizeof(char) * size));
+      socket_read(sock, message, size);
+      for (int i = 0; i < size; i++) {
         result[i] = (int)message[i];
       }
       free(message);
@@ -83,22 +91,23 @@ int action(int state, int sock, int* result, int result_size, float32_t* data) {
       // Obter o data set
       message = malloc((sizeof(char) * data_size * IMAGE_SIZE));
       socket_read(sock, message, data_size * IMAGE_SIZE);
-      data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
+      *data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
       for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
-        data[i] = (float32_t)message[i];
+        (*data)[i] = (float32_t)message[i];
       }
       free(message);
       return data_size;
     case SEND_INFERENCE_RESULT:
-      message = malloc(sizeof(char) * result_size);
-      for (int i = 0; i < result_size; i++) {
+      message = malloc(sizeof(char) * size);
+      for (int i = 0; i < size; i++) {
         message[i] = (char)result[i];
       }
-      socket_write(sock, message, result_size);
+      socket_write(sock, message, size);
       free(message);
       return 0;
     case END_CONNECTION:
       socket_close(sock);
+      return 0;
     default:
       return 0;
   }

@@ -15,15 +15,20 @@ int main2() {
   int *expected_output, *result, accuracy;
   int data_set_size, iterations;
 
-  // UART Variables
+  // FSM Variables
   int state, sock, mode, action_result, server_fd;
 
+  state = INIT;
+
   while (1) {
-    action_result = action(state, sock, result, data_set_size, data_set);
+    action_result = action(state, sock, result, data_set_size, &data_set);
     switch (state) {
       case INIT:
+        server_fd = action_result;
+        result = &server_fd;
+        break;
+      case LISTEN:
         sock = action_result;
-        server_fd = *result;
         break;
       case IDLE:
         mode = action_result;
@@ -31,7 +36,7 @@ int main2() {
       case WAIT_TRAIN_DATA:
         data_set_size = action_result;
         break;
-      case WAIT_TRAIN_RESULT:
+      case WAIT_TRAIN_LABELS:
         expected_output = result;
         break;
       case WAIT_TRAIN_ITERATIONS:
@@ -53,10 +58,12 @@ int main2() {
                       hidden_layer1_weight, hidden_layer1_bias,
                       hidden_layer2_weight, hidden_layer2_bias, data_set_size);
         free(data_set);
+        break;
       case SEND_INFERENCE_RESULT:
         free(result);
         break;
       case END_CONNECTION:
+        result = &server_fd;
         break;
       default:
     }
