@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "client_fsm.h"
 #include "neural_network.h"
-#include "uart.h"
-#include "uart_fsm.h"
+#include "socket_wrapper.h"
 
 int main2() {
   // CNN Variables
@@ -18,7 +18,7 @@ int main2() {
   // UART Variables
   int state, handler, mode, action_result;
 
-  handler = uart_init();
+  handler = socket_init();
   state = IDLE;
 
   while (1) {

@@ -1,10 +1,10 @@
 
-#include "uart_fsm.h"
+#include "client_fsm.h"
 
 #include <stdlib.h>
 
 #include "neural_network.h"
-#include "uart.h"
+#include "socket_wrapper.h"
 
 int next_state(int state, int mode) {
   switch (state) {
@@ -37,15 +37,15 @@ int action(int state, int handler, int* result, int result_size,
   switch (state) {
     case IDLE:
       mode = 0;
-      uart_read(handler, (char*)&mode, sizeof(char));
+      socket_read(handler, (char*)&mode, sizeof(char));
       if (mode != TRAIN || mode != INFER) return NONE;
       return mode;
     case WAIT_TRAIN_DATA:
       // Obter o tamanho do data set
-      uart_read(handler, (char*)&data_size, sizeof(int) / sizeof(char));
+      socket_read(handler, (char*)&data_size, sizeof(int) / sizeof(char));
       // Obter o data set
       message = malloc((sizeof(char) * data_size * INPUT_LAYER_SIZE));
-      uart_read(handler, message, data_size * INPUT_LAYER_SIZE);
+      socket_read(handler, message, data_size * INPUT_LAYER_SIZE);
       data = malloc((sizeof(float32_t) * data_size * INPUT_LAYER_SIZE));
       for (int i = 0; i < data_size * INPUT_LAYER_SIZE; i++) {
         data[i] = (float32_t)message[i];
@@ -54,7 +54,7 @@ int action(int state, int handler, int* result, int result_size,
       return data_size;
     case WAIT_TRAIN_RESULT:
       message = malloc((sizeof(char) * data_size * INPUT_LAYER_SIZE));
-      uart_read(handler, message, data_size * INPUT_LAYER_SIZE);
+      socket_read(handler, message, data_size * INPUT_LAYER_SIZE);
       result = malloc(sizeof(int) * data_size * INPUT_LAYER_SIZE);
       for (int i = 0; i < data_size * INPUT_LAYER_SIZE; i++) {
         result[i] = (int)message[i];
@@ -62,17 +62,17 @@ int action(int state, int handler, int* result, int result_size,
       free(message);
       return 0;
     case WAIT_TRAIN_ITERATIONS:
-      uart_read(handler, (char*)&iterations, sizeof(int) / sizeof(char));
+      socket_read(handler, (char*)&iterations, sizeof(int) / sizeof(char));
       return iterations;
     case SEND_TRAINING_RESULT:
-      uart_write(handler, (char*)result, sizeof(int) / sizeof(char));
+      socket_write(handler, (char*)result, sizeof(int) / sizeof(char));
       return 0;
     case WAIT_INFERENCE_DATA:
       // Obter o tamanho do data set
-      uart_read(handler, (char*)&data_size, sizeof(int) / sizeof(char));
+      socket_read(handler, (char*)&data_size, sizeof(int) / sizeof(char));
       // Obter o data set
       message = malloc((sizeof(char) * data_size * INPUT_LAYER_SIZE));
-      uart_read(handler, message, data_size * INPUT_LAYER_SIZE);
+      socket_read(handler, message, data_size * INPUT_LAYER_SIZE);
       data = malloc((sizeof(float32_t) * data_size * INPUT_LAYER_SIZE));
       for (int i = 0; i < data_size * INPUT_LAYER_SIZE; i++) {
         data[i] = (float32_t)message[i];
@@ -84,7 +84,7 @@ int action(int state, int handler, int* result, int result_size,
       for (int i = 0; i < result_size; i++) {
         message[i] = (char)result[i] + 0x30;
       }
-      uart_write(handler, message, result_size);
+      socket_write(handler, message, result_size);
       free(message);
       return 0;
     default:
