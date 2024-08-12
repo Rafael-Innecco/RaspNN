@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MATRIX_M 4
-#define MATRIX_N 4
+#define MATRIX_M 13
+#define MATRIX_N 11
 
 // Placeholder
 int main() {
@@ -12,7 +12,7 @@ int main() {
   float32_t * altA = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
   float32_t * B = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
 
-  int * intA = malloc (sizeof(float32_t) * 5);
+  // int * intA = malloc (sizeof(float32_t) * 5);
 
   int i, j;
 
@@ -27,7 +27,7 @@ int main() {
       altA[MATRIX_N*i + j] = A[MATRIX_N*i + j];
     }
     
-    intA[i] = i*i % 10;
+    // intA[i] = i*i % 10;
   }
 
   printf("\033[36mMatrizes operando:\n");
@@ -63,8 +63,8 @@ int main() {
   // print_matrix(reluDevA, MATRIX_M, MATRIX_N);
   // printf("\033[35moneHot A\n");
   // print_matrix(oneHotA, 10, 5);
-  printf("\033[31mTraspose B\n");
-  print_matrix(transposeB, MATRIX_N, MATRIX_M);
+  // printf("\033[31mTraspose B\n");
+  // print_matrix(transposeB, MATRIX_N, MATRIX_M);
   printf("\033[33mMinMax A\n");
   print_matrix(minMaxA, MATRIX_M, MATRIX_N);
   printf("\033[0m");
@@ -74,7 +74,5 @@ int main() {
   free(B);
   free(altA);
   free(transposeB);
-  free(intA);
-  free(minMaxA);
   return 0;
 }

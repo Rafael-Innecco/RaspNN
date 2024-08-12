@@ -149,7 +149,7 @@ void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
 }
 
 float32_t max_vector_fast(float32_t* A, const int n) {
-  float32_t max = FLOAT_MIN;
+  float32_t max = -1.0 * FLOAT_MAX;
   int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
   int n_iter = n - n % 8;
   int i;
@@ -193,20 +193,13 @@ float32_t min_vector_fast(float32_t* A, const int n) {
 }
 
 float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
-  printf("MinMax allocation start\n");
   float32_t* B = malloc(sizeof(float32_t) * n * m);
   float32_t* A_T = transpose_matrix(A, m, n);
   float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
   int i, j;
   int m_iter = m - m % 4;
-  printf("MinMax allocation end\n");
-  printf("\033[35m");
-  print_matrix(A_T, n, m);
-  printf("\033[0m");
   for (i = 0; i < n; i++) {
-    printf("\033[34m");
-    printf("i = %d\n", i);
     copy_vector(A_T + m * i, vec, m);
     min = min_vector_fast(vec, m);
     copy_vector(A_T + m * i, vec, m);
@@ -217,17 +210,15 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
     for (j = 0; j < m_iter; j += 4) {
       float32x4_t a = vld1q_f32(A_T + m * i + j);
       float32x4_t result = vmlaq_n_f32(min_normalized_vec, a, inverse_interval);
-      vst1q_f32(B + m * i + j, a);
+      vst1q_f32(B + m * i + j, result);
     }
     while (j < m) {
       B[m * i + j] = A_T[m * i + j] * inverse_interval + min_normalized;
       j++;
     }
-    printf("\033[0m");
   }
   float32_t* C = transpose_matrix(B, n, m);
   free(B);
-  free(A_T);
   free(vec);
   free(A_T);
   return C;
@@ -255,9 +246,7 @@ float32_t* one_hot_matrix(const int* A, const int m, const int n) {
 }
 
 float32_t* transpose_matrix(const float32_t* A, const int m, const int n) {
-  printf("Start transpose allocation\n");
   float32_t* B = malloc(sizeof(float32_t) * n * m);
-  printf("Finished transpose allocation\n");
   int m_iter = m - m % 4;
   int n_iter = n - n % 4;
   int i, j, j2;
