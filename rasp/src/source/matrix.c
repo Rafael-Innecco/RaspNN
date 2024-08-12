@@ -261,17 +261,17 @@ float32_t* transpose_matrix(const float32_t* A, const int m, const int n) {
       float32x4x2_t zip1 = vzipq_f32(a1, a2);
       float32x4x2_t zip2 = vzipq_f32(a3, a4);
       float32x4_t b1 =
-          vcombine_f32(vget_high_f32(zip2.val[0]), vget_high_f32(zip1.val[0]));
+          vcombine_f32(vget_low_f32(zip1.val[0]), vget_low_f32(zip2.val[0]));
       float32x4_t b2 =
-          vcombine_f32(vget_low_f32(zip2.val[0]), vget_low_f32(zip1.val[0]));
+          vcombine_f32(vget_high_f32(zip1.val[0]), vget_high_f32(zip2.val[0]));
       float32x4_t b3 =
-          vcombine_f32(vget_high_f32(zip2.val[1]), vget_high_f32(zip1.val[1]));
+          vcombine_f32(vget_low_f32(zip1.val[1]), vget_low_f32(zip2.val[1]));
       float32x4_t b4 =
-          vcombine_f32(vget_low_f32(zip2.val[1]), vget_low_f32(zip1.val[1]));
-      vst1q_f32(B + n * j + i, b1);
-      vst1q_f32(B + n * (j + 1) + i, b2);
-      vst1q_f32(B + n * (j + 2) + i, b3);
-      vst1q_f32(B + n * (j + 3) + i, b4);
+          vcombine_f32(vget_high_f32(zip1.val[1]), vget_high_f32(zip2.val[1]));
+      vst1q_f32(B + m * j + i, b1);
+      vst1q_f32(B + m * (j + 1) + i, b2);
+      vst1q_f32(B + m * (j + 2) + i, b3);
+      vst1q_f32(B + m * (j + 3) + i, b4);
     }
 
     if (j < n) {
@@ -282,16 +282,16 @@ float32_t* transpose_matrix(const float32_t* A, const int m, const int n) {
       float32x4x2_t zip1 = vzipq_f32(a1, a2);
       float32x4x2_t zip2 = vzipq_f32(a3, a4);
       float32x4_t b1 =
-          vcombine_f32(vget_high_f32(zip2.val[0]), vget_high_f32(zip1.val[0]));
+          vcombine_f32(vget_low_f32(zip1.val[0]), vget_low_f32(zip2.val[0]));
       float32x4_t b2 =
-          vcombine_f32(vget_low_f32(zip2.val[0]), vget_low_f32(zip1.val[0]));
+          vcombine_f32(vget_high_f32(zip1.val[0]), vget_high_f32(zip2.val[0]));
       float32x4_t b3 =
-          vcombine_f32(vget_high_f32(zip2.val[1]), vget_high_f32(zip1.val[1]));
+          vcombine_f32(vget_low_f32(zip1.val[1]), vget_low_f32(zip2.val[1]));
       float32x4_t b4 =
-          vcombine_f32(vget_low_f32(zip2.val[1]), vget_low_f32(zip1.val[1]));
+          vcombine_f32(vget_high_f32(zip1.val[1]), vget_high_f32(zip2.val[1]));
       j2 = j;
       while (j2 < n) {
-        vst1q_f32(B + n * j2 + i, b1);
+        vst1q_f32(B + m * j2 + i, b1);
         b1 = b2;
         b2 = b3;
         b3 = b4;
@@ -299,9 +299,10 @@ float32_t* transpose_matrix(const float32_t* A, const int m, const int n) {
       }
     }
   }
+
   while (i < m) {
     for (j = 0; j < n; j++) {
-      B[j * n + i] = A[i * n + j];
+      B[j * m + i] = A[i * n + j];
     }
     i++;
   }

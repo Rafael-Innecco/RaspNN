@@ -1,4 +1,4 @@
-FONTE = src/source/
+FONTE = rasp/src/source/
 FONTES = $(wildcard ${FONTE}*.c)
 LDSCRIPT = linker.ld
 BUILDDIR = build/
@@ -20,7 +20,7 @@ OBJCPY = objcopy
 OBJDMP = objdump
 
 ASM_OPTIONS = -g
-C_OPTIONS = -Isrc/include -mtune=cortex-a53 -O2
+C_OPTIONS = -Irasp/src/include -mtune=cortex-a53 -O2
 LD_OPTIONS = -lc -L/usr/lib/aarch64-linux-gnu
 
 OBJ = $(FONTES:.s=.o)
@@ -29,7 +29,7 @@ OBJETOS = $(OBJ:.c=.o)
 all: ${EXEC} ${IMAGE} ${LIST} ${HEXFILE}
 
 compile:
-	gcc -Isrc/include -O2 -g ${FONTE}*.c -o test.out
+	gcc -Irasp/src/include -Icommon/src/include -O2 -g  ${FONTE}math_func.c ${FONTE}matrix.c  ${FONTE}main.c -o test.out
 
 run: compile
 	./test.out
