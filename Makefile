@@ -34,6 +34,9 @@ compile:
 run: compile
 	./test.out
 
+check:
+	valgrind -s --leak-check=full --track-origins=yes --show-leak-kinds=all ./test.out
+
 # Criar diretório build
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)

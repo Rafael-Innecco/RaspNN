@@ -2,11 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MATRIX_M 13
-#define MATRIX_N 11
-
-void print_matrix(float32_t*, int, int);
-void print_int_matrix(int*, int, int);
+#define MATRIX_M 4
+#define MATRIX_N 4
 
 // Placeholder
 int main() {
@@ -21,7 +18,6 @@ int main() {
 
   for (i = 0; i < MATRIX_M; i++) {
     for (j = 0; j < MATRIX_N; j++) {
-      printf("i = %d ; j = %d\n", i, j);
       if (j % 2 == 0) {
          A[MATRIX_N*i + j] = - 4.0 / (i + j + 1.0);
       } else {
@@ -37,7 +33,7 @@ int main() {
   printf("\033[36mMatrizes operando:\n");
   print_matrix(A, MATRIX_M, MATRIX_N);
   print_matrix(B, MATRIX_M, MATRIX_N);
-  print_int_matrix(intA, 5, 1);
+  // print_int_matrix(intA, 5, 1);
   printf("\033[0m\n");
 
   // float32_t * scalarA = multiply_matrix_scalar(A, -2.85, MATRIX_M, MATRIX_N);
@@ -51,7 +47,7 @@ int main() {
 
   // sum_multiply_matrix_scalar_fast(altA, B, 5.7, MATRIX_M, MATRIX_N);
 
-  // float32_t * minMaxA = minmax_matrix(A, MATRIX_M, MATRIX_N);
+  float32_t * minMaxA = minmax_matrix(A, MATRIX_M, MATRIX_N);
 
   // printf("\033[33mScalar multiplication A\n");
   // print_matrix(scalarA, MATRIX_M, MATRIX_N);
@@ -69,32 +65,16 @@ int main() {
   // print_matrix(oneHotA, 10, 5);
   printf("\033[31mTraspose B\n");
   print_matrix(transposeB, MATRIX_N, MATRIX_M);
-
+  printf("\033[33mMinMax A\n");
+  print_matrix(minMaxA, MATRIX_M, MATRIX_N);
   printf("\033[0m");
- return 0;
-}
-
-void print_matrix(float32_t* A, int m, int n) {
-  int i, j;
-  printf("\n");
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n; j++) {
-      printf("\t%f ", A[n*i + j]);
-    }
-    printf("\n");
-  }
-  printf("\n");
-}
 
 
-void print_int_matrix(int* A, int m, int n) {
-  int i, j;
-  printf("\n");
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n; j++) {
-      printf("\t%d ", A[n*i + j]);
-    }
-    printf("\n");
-  }
-  printf("\n");
+  free(A);
+  free(B);
+  free(altA);
+  free(transposeB);
+  free(intA);
+  free(minMaxA);
+  return 0;
 }

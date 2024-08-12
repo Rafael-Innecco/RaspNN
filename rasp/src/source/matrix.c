@@ -193,13 +193,20 @@ float32_t min_vector_fast(float32_t* A, const int n) {
 }
 
 float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
+  printf("MinMax allocation start\n");
   float32_t* B = malloc(sizeof(float32_t) * n * m);
   float32_t* A_T = transpose_matrix(A, m, n);
   float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
   int i, j;
   int m_iter = m - m % 4;
+  printf("MinMax allocation end\n");
+  printf("\033[35m");
+  print_matrix(A_T, n, m);
+  printf("\033[0m");
   for (i = 0; i < n; i++) {
+    printf("\033[34m");
+    printf("i = %d\n", i);
     copy_vector(A_T + m * i, vec, m);
     min = min_vector_fast(vec, m);
     copy_vector(A_T + m * i, vec, m);
@@ -216,21 +223,23 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
       B[m * i + j] = A_T[m * i + j] * inverse_interval + min_normalized;
       j++;
     }
+    printf("\033[0m");
   }
   float32_t* C = transpose_matrix(B, n, m);
   free(B);
   free(A_T);
   free(vec);
+  free(A_T);
   return C;
 }
 
 void copy_vector(const float32_t* A, float32_t* B, const int n) {
-  int i;
+  int i = 0;
   int n_iter = n - n % 4;
-  for (i = 0; i < n_iter; i += 4) {
-    float32x4_t a = vld1q_f32(A + i);
-    vst1q_f32(B + i, a);
-  }
+  // for (i = 0; i < n_iter; i += 4) {
+  //   float32x4_t a = vld1q_f32(A + i);
+  //   vst1q_f32(B + i, a);
+  // }
   while (i < n) {
     B[i] = A[i];
     i++;
@@ -246,7 +255,9 @@ float32_t* one_hot_matrix(const int* A, const int m, const int n) {
 }
 
 float32_t* transpose_matrix(const float32_t* A, const int m, const int n) {
+  printf("Start transpose allocation\n");
   float32_t* B = malloc(sizeof(float32_t) * n * m);
+  printf("Finished transpose allocation\n");
   int m_iter = m - m % 4;
   int n_iter = n - n % 4;
   int i, j, j2;
@@ -421,3 +432,30 @@ int* matrix_redux_int(const int* A, const int m, const int n) {
   }
   return B;
 }
+
+void print_matrix(float32_t* A, int m, int n) {
+  int i, j;
+  printf("\n");
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      printf("\t%f ", A[n*i + j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
+
+void print_int_matrix(int* A, int m, int n) {
+  int i, j;
+  printf("\n");
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      printf("\t%d ", A[n*i + j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
+

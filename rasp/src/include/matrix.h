@@ -6,9 +6,18 @@
 #define FLOAT_MAX 0X7F800000
 #define FLOAT_MIN 0xFF800000
 
+
+// Some utility funcitons
+
 float32_t* init_matrix(const float32_t x, const int m, const int n);
 
 float32_t* init_matrix_random(const int m, const int n);
+
+void print_matrix(float32_t*, int, int);
+
+void print_int_matrix(int*, int, int);
+
+// Matrix operations
 
 // Tested
 float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
@@ -37,6 +46,7 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n);
 
 void copy_vector(const float32_t* A, float32_t* B, const int n);
 
+// Tested
 float32_t* transpose_matrix(const float32_t* A, const int m, const int n);
 
 // Tested
