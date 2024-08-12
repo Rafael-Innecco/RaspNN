@@ -47,6 +47,35 @@ float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
     vst1q_f32(C + i, c);
   }
 
+  while (i < n * m) {
+    C[i] = A[i] + B[i];
+    i++;
+  }
+
+  return C;
+}
+
+float32_t* sum_matrix_vector(const float32_t* A, const float32_t* B,
+                             const int m, const int n) {
+  int i, j;
+  float32_t* C = malloc(sizeof(float32_t) * n * m);
+  int n_iter = n - (n % 4);
+  float32x4_t b;
+
+  for (i = 0; i < m; i++) {
+    b = vmoq_n_f32(B[i]);
+    for (j = 0; j < n_iter; j += 4) {
+      float32x4_t a = vld1q_f32(A + n * i + j);
+      float32x4_t c = vaddq_f32(a, b);
+      vst1q_f32(C + n * i + j, c);
+    }
+
+    while (j < n) {
+      C[n * i + j] = A[n + i + j] + B[i];
+      j++;
+    }
+  }
+
   return C;
 }
 
@@ -339,6 +368,26 @@ float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
       C[n * i + j] = result;
     }
   }
+  return C;
+}
+
+float32_t* multiply_matrix_hadamard(const float32_t* A, const float32_t* B,
+                                    const int m, const int n) {
+  int i;
+  float32_t* C = malloc(sizeof(float32_t) * n * m);
+  int iter = (n * m) - ((n * m) % 4);
+  for (i = 0; i < iter; i += 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    float32x4_t b = vld1q_f32(B + i);
+    float32x4_t c = vmulq_f32(a, b);
+    vst1q_f32(C + i, c);
+  }
+
+  while (i < n * m) {
+    C[i] = A[i] * B[i];
+    i++;
+  }
+
   return C;
 }
 

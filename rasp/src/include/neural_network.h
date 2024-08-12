@@ -4,8 +4,8 @@
 #include <arm_neon.h>
 
 #define INPUT_LAYER_SIZE 784
-#define HIDDEN_LAYER1_SIZE 1000
-#define HIDDEN_LAYER2_SIZE 1000
+#define HIDDEN_LAYER1_SIZE 100
+#define HIDDEN_LAYER2_SIZE 100
 #define OUTPUT_LAYER_SIZE 10
 
 #define LEARNING_RATE 0.1
