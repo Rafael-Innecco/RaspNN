@@ -55,6 +55,9 @@ float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
   return C;
 }
 
+/***
+  * O vetor B deve ter dimensão M x 1
+ ***/
 float32_t* sum_matrix_vector(const float32_t* A, const float32_t* B,
                              const int m, const int n) {
   int i, j;
@@ -63,7 +66,7 @@ float32_t* sum_matrix_vector(const float32_t* A, const float32_t* B,
   float32x4_t b;
 
   for (i = 0; i < m; i++) {
-    b = vmoq_n_f32(B[i]);
+    b = vmovq_n_f32(B[i]);
     for (j = 0; j < n_iter; j += 4) {
       float32x4_t a = vld1q_f32(A + n * i + j);
       float32x4_t c = vaddq_f32(a, b);

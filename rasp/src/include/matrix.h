@@ -21,6 +21,7 @@ void print_int_matrix(int*, int, int);
 float32_t* sum_matrix(const float32_t* A, const float32_t* B, const int m,
                       const int n);
 
+// Tested
 float32_t* sum_matrix_vector(const float32_t* A, const float32_t* B,
                              const int m, const int n);
 
@@ -64,6 +65,7 @@ float32_t* multiply_matrix_scalar(const float32_t* A, const float32_t x,
 float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
                                   const int m, const int l, const int n);
 
+// Tested
 float32_t* multiply_matrix_hadamard(const float32_t* A, const float32_t* B,
                                     const int m, const int n);
 
