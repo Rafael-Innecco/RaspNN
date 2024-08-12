@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "mnist_file.h"
 #include "server_fsm.h"
 #include "socket_wrapper.h"
 
@@ -51,7 +52,7 @@ int main() {
         for (int i = 0; i < data_set_size; i++) {
           labels[i] = (char)result[i];
         }
-        file = fopen("MNIST2/train-labels", "w");
+        file = fopen("MNIST2/train-labels", "wb");
         if (file == NULL) {
           perror("Error opening file");
           return 1;
@@ -66,7 +67,7 @@ int main() {
       case WAIT_TRAIN_ITERATIONS:
         iterations = action_result;
         printf("New Iterations: %d\n", iterations);
-        file = fopen("MNIST2/train-images", "w");
+        file = fopen("MNIST2/train-images", "wb");
         if (file == NULL) {
           perror("Error opening file");
           return 1;
@@ -92,7 +93,7 @@ int main() {
         for (int i = 0; i < data_set_size * IMAGE_SIZE; i++) {
           images[i] = (char)data_set[i];
         }
-        file = fopen("MNIST2/test-images", "w");
+        file = fopen("MNIST2/test-images", "wb");
         if (file == NULL) {
           perror("Error opening file");
           return 1;
@@ -105,16 +106,7 @@ int main() {
         fclose(file);
         free(images);
         free(data_set);
-        labels = malloc(sizeof(char) * data_set_size);
-        file = fopen("MNIST2/test-labels", "r");
-        if (file == NULL) {
-          perror("Error opening file");
-          return 1;
-        }
-        num_elements = fread(labels, sizeof(char), data_set_size, file);
-        if (num_elements != data_set_size) {
-          perror("Error writing to file");
-        }
+        data_set_size = get_mnist_labels("MNIST2/test-labels", &labels);
         result = malloc(sizeof(int) * data_set_size);
         for (int i = 0; i < data_set_size; i++) {
           result[i] = (int)labels[i];
@@ -127,8 +119,6 @@ int main() {
         break;
       case END_CONNECTION:
         result = &server_fd;
-        close(server_fd);
-        return 0;
         break;
       default:
     }
