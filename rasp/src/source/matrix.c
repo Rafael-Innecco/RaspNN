@@ -148,7 +148,7 @@ void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
   return;
 }
 
-void max_vector_fast(float32_t* A, const int n) {
+float32_t max_vector_fast(float32_t* A, const int n) {
   float32_t max = FLOAT_MIN;
   int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
   int n_iter = n - n % 8;
@@ -165,12 +165,12 @@ void max_vector_fast(float32_t* A, const int n) {
       i++;
     }
     A[m - 1] = max;
-    if (n < 8) return;
+    if (n < 8) return max;
   }
-  max_vector_fast(A, m);
+  return max_vector_fast(A, m);
 }
 
-void min_vector_fast(float32_t* A, const int n) {
+float32_t min_vector_fast(float32_t* A, const int n) {
   float32_t min = FLOAT_MAX;
   int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
   int n_iter = n - n % 8;
@@ -187,14 +187,13 @@ void min_vector_fast(float32_t* A, const int n) {
       i++;
     }
     A[m - 1] = min;
-    if (n < 8) return;
+    if (n < 8) return min;
   }
-  min_vector_fast(A, m);
+  return min_vector_fast(A, m);
 }
 
 float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
-  float32_t* C;
   float32_t* A_T = transpose_matrix(A, m, n);
   float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
@@ -202,11 +201,9 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
   int m_iter = m - m % 4;
   for (i = 0; i < n; i++) {
     copy_vector(A_T + m * i, vec, m);
-    min_vector_fast(vec, m);
-    min = vec[0];
-    copy_vector(A_T + m * i, vec + m, m);
-    max_vector_fast(vec, m);
-    max = vec[0];
+    min = min_vector_fast(vec, m);
+    copy_vector(A_T + m * i, vec, m);
+    max = max_vector_fast(vec, m);
     float32_t inverse_interval = 1 / (max - min);
     float32_t min_normalized = -min / (max - min);
     float32x4_t min_normalized_vec = vmovq_n_f32(min_normalized);
@@ -220,8 +217,9 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
       j++;
     }
   }
-  C = transpose_matrix(B, n, m);
+  float32_t* C = transpose_matrix(B, n, m);
   free(B);
+  free(A_T);
   free(vec);
   return C;
 }
@@ -323,13 +321,13 @@ float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
       sum = vmovq_n_f32(0);
       result = 0.0;
       for (k = 0; k < l_iter; k += 4) {
-        float32x4_t a = vld1q_f32(A + m * i + k);
-        float32x4_t b = vld1q_f32(B + n * j + k);
+        float32x4_t a = vld1q_f32(A + l * i + k);
+        float32x4_t b = vld1q_f32(B + l * j + k);
         sum = vfmaq_f32(sum, a, b);
       }
 
       while (k < l) {
-        result += A[m * i + j] * B[n * j + k];
+        result += A[l * i + k] * B[l * j + k];
         k++;
       }
 
@@ -338,7 +336,7 @@ float32_t* multiply_matrix_matrix(const float32_t* A, const float32_t* B,
       result += vgetq_lane_f32(sum, 2);
       result += vgetq_lane_f32(sum, 3);
 
-      C[m * i + j] = result;
+      C[n * i + j] = result;
     }
   }
   return C;
@@ -368,7 +366,7 @@ int* compare_vector(const int* A, const int* B, const int n) {
 
 float32_t* matrix_redux_float(const float32_t* A, const int m, const int n) {
   int i, j;
-  float32_t* B = malloc(sizeof(float32_t) * n);
+  float32_t* B = malloc(sizeof(float32_t) * m);
   float32x4_t sum;
   float32_t result;
   int n_iter = n - n % 4;
@@ -390,14 +388,14 @@ float32_t* matrix_redux_float(const float32_t* A, const int m, const int n) {
     result += vgetq_lane_f32(sum, 2);
     result += vgetq_lane_f32(sum, 3);
 
-    B[m * i + j] = result;
+    B[i] = result;
   }
   return B;
 }
 
 int* matrix_redux_int(const int* A, const int m, const int n) {
   int i, j;
-  int* B = malloc(sizeof(int) * n);
+  int* B = malloc(sizeof(int) * m);
   int32x4_t sum;
   int result;
   int n_iter = n - n % 4;
@@ -419,7 +417,7 @@ int* matrix_redux_int(const int* A, const int m, const int n) {
     result += vgetq_lane_s32(sum, 2);
     result += vgetq_lane_s32(sum, 3);
 
-    B[m * i + j] = result;
+    B[i] = result;
   }
   return B;
 }

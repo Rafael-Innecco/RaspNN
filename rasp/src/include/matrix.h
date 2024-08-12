@@ -28,9 +28,9 @@ float32_t* relu_matrix(const float32_t* A, const int m, const int n);
 // Tested
 float32_t* relu_derivate_matrix(const float32_t* A, const int m, const int n);
 
-void max_vector_fast(float32_t* A, const int n);
+float32_t max_vector_fast(float32_t* A, const int n);
 
-void min_vector_fast(float32_t* A, const int n);
+float32_t min_vector_fast(float32_t* A, const int n);
 
 // Not tested
 float32_t* minmax_matrix(const float32_t* A, const int m, const int n);
