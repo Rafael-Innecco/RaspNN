@@ -189,7 +189,7 @@ float32_t max_vector_fast(float32_t* A, const int n) {
     float32x4_t a_max = vld1q_f32(A + i);
     float32x4_t b_max = vld1q_f32(A + i + 4);
     float32x4_t max_vector = vmaxq_f32(a_max, b_max);
-    vst1q_f32(A + m + (i >> 1), max_vector);
+    vst1q_f32(A + (i >> 1), max_vector);
   }
   if (n % 8) {
     while (i < n) {
