@@ -1,17 +1,17 @@
 FONTE = rasp/src/source/
+DFONTE = desktop/src/source/
+CFONTE = common/src/source/
 FONTES = $(wildcard ${FONTE}*.c)
-LDSCRIPT = linker.ld
+DFONTES = $(wildcard ${DFONTE}*.c)
+CFONTES = $(wildcard ${CFONTE}*.c)
 BUILDDIR = build/
 PROJECT = ${BUILDDIR}teste
 
 #
 # Arquivos de saída
 #
-EXEC = ${PROJECT}.elf
-MAP = ${PROJECT}.map
-IMAGE = ${PROJECT}.img
-HEXFILE = ${PROJECT}.hex
-LIST = ${PROJECT}.list
+RTARGET = rasp/${BUILDDIR}rasp.out
+DTARGET = desktop/${BUILDDIR}desk.out
 
 AS = as
 LD = ld
@@ -19,69 +19,31 @@ GCC = gcc
 OBJCPY = objcopy
 OBJDMP = objdump
 
-ASM_OPTIONS = -g
-C_OPTIONS = -Irasp/src/include -mtune=cortex-a53 -O2
-LD_OPTIONS = -lc -L/usr/lib/aarch64-linux-gnu
-
-OBJ = $(FONTES:.s=.o)
-OBJETOS = $(OBJ:.c=.o)
+RASP_C_OPTIONS = -Irasp/src/include -Icommon/src/include -O2 -g
+DESKTOP_C_OPTIONS = -Idesktop/src/include -Icommon/src/include -O2 -g
+VALGRIND_OPTIONS = -s --leak-check=full --track-origins=yes --show-leak-kinds=all 
 
 all: ${EXEC} ${IMAGE} ${LIST} ${HEXFILE}
 
 compile:
-	gcc -Irasp/src/include -Icommon/src/include -O2 -g  ${FONTE}math_func.c ${FONTE}matrix.c  ${FONTE}main.c -o ${BUILDDIR}test.out
+	gcc ${RASP_C_OPTIONS} ${FONTE}math_func.c ${FONTE}matrix.c ${FONTE}main.c -o ${RTARGET}
 
 run: compile
-	${BUILDDIR}test.out
+	${RTARGET}
 
 check:
-	valgrind -s --leak-check=full --track-origins=yes --show-leak-kinds=all ${BUILDDIR}test.out
+	valgrind ${VALGRIND_OPTIONS} ${RTARGET}
 
 assmeble:
-	gcc -Irasp/src/include -Icommon/src/include -O2 -S  ${FONTE}math_func.c ${FONTE}matrix.c  ${FONTE}main.c 
+	gcc -Irasp/src/include -Icommon/src/include -O2 -S ${FONTE}math_func.c -o rasp/${BUILDDIR}/math_func.s
+	gcc -Irasp/src/include -Icommon/src/include -O2 -S ${FONTE}matrix.c -o rasp/${BUILDDIR}/matrix.s
+	gcc -Irasp/src/include -Icommon/src/include -O2 -S ${FONTE}main.c -o rasp/${BUILDDIR}/main.s
 
-# Criar diretório build
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
-
-#
-# Gerar executável
-#
-${EXEC}: ${OBJETOS} $(BUILDDIR)
-	${LD} -T ${LDSCRIPT} -M=${MAP} -o $@  ${OBJETOS} ${LD_OPTIONS}
-
-#
-# Gerar imagem
-#
-${IMAGE}: ${EXEC}
-	${OBJCPY} ${EXEC} -O binary ${IMAGE}
-
-#
-# Gerar intel Hex
-#
-${HEXFILE}: ${EXEC}
-	${OBJCPY} ${EXEC} -O ihex ${HEXFILE}
-
-#
-# Gerar listagem
-#
-${LIST}: ${EXEC}
-	${OBJDMP} -sdt ${EXEC} > ${LIST}
-
-#
-# Compilar arquivos em C
-#
-.c.o:
-	${GCC} ${C_OPTIONS} -c -o $@ $<
-
-#
-# Montar arquivos em assembler
-#
-.s.o:
-	${AS} ${ASM_OPTIONS} -o $@ $<
-
+build_client:
+	gcc ${DESKTOP_C_OPTIONS} ${DFONTES} -o ${DTARGET}
+	
 #
 # Limpar tudo
 #
 clean:
-	rm -f ${FONTE}*.o ${EXEC} ${MAP} ${LIST} ${IMAGE}
+	rm -f ${RTARGET} ${DTARGET}
