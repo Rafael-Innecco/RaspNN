@@ -69,7 +69,7 @@ int main() {
 
   // sum_multiply_matrix_scalar_fast(altA, B, 5.7, MATRIX_M, MATRIX_N);
 
-  // float32_t * minMaxA = minmax_matrix(A, MATRIX_M, MATRIX_N);
+  float32_t * minMaxA = minmax_matrix(A, MATRIX_M, MATRIX_N);
   // float32_t * reduxB = matrix_redux_float(B, MATRIX_M, MATRIX_N);
   // int * reduxIntMA = matrix_redux_int(intMA, MATRIX_M, MATRIX_N);
   float32_t * sumAvec = sum_matrix_vector(A, fvec, MATRIX_M, MATRIX_N); 
@@ -91,8 +91,8 @@ int main() {
   // print_matrix(oneHotA, 10, 5);
   // printf("\033[31mTraspose B\n");
   // print_matrix(transposeB, MATRIX_N, MATRIX_M);
-  // printf("\033[33mMinMax A\n");
-  // print_matrix(minMaxA, MATRIX_M, MATRIX_N);
+  printf("\033[33mMinMax A\n");
+  print_matrix(minMaxA, MATRIX_M, MATRIX_N);
   // printf("\033[34mA x D\n");
   // print_matrix(mult, MATRIX_M, MATRIX_O);
   // printf("\033[35mCompare intA intB\n");

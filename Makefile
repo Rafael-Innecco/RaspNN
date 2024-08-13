@@ -29,13 +29,16 @@ OBJETOS = $(OBJ:.c=.o)
 all: ${EXEC} ${IMAGE} ${LIST} ${HEXFILE}
 
 compile:
-	gcc -Irasp/src/include -Icommon/src/include -O2 -g  ${FONTE}math_func.c ${FONTE}matrix.c  ${FONTE}main.c -o test.out
+	gcc -Irasp/src/include -Icommon/src/include -O2 -g  ${FONTE}math_func.c ${FONTE}matrix.c  ${FONTE}main.c -o ${BUILDDIR}test.out
 
 run: compile
-	./test.out
+	${BUILDDIR}test.out
 
 check:
-	valgrind -s --leak-check=full --track-origins=yes --show-leak-kinds=all ./test.out
+	valgrind -s --leak-check=full --track-origins=yes --show-leak-kinds=all ${BUILDDIR}test.out
+
+assmeble:
+	gcc -Irasp/src/include -Icommon/src/include -O2 -S  ${FONTE}math_func.c ${FONTE}matrix.c  ${FONTE}main.c 
 
 # Criar diretório build
 $(BUILDDIR):

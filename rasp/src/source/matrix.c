@@ -259,10 +259,10 @@ float32_t* minmax_matrix(const float32_t* A, const int m, const int n) {
 void copy_vector(const float32_t* A, float32_t* B, const int n) {
   int i = 0;
   int n_iter = n - n % 4;
-  // for (i = 0; i < n_iter; i += 4) {
-  //   float32x4_t a = vld1q_f32(A + i);
-  //   vst1q_f32(B + i, a);
-  // }
+  for (i = 0; i < n_iter; i += 4) {
+    float32x4_t a = vld1q_f32(A + i);
+    vst1q_f32(B + i, a);
+  }
   while (i < n) {
     B[i] = A[i];
     i++;
