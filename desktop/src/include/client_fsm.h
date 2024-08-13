@@ -21,7 +21,7 @@
 #define INFER 2
 #define CLOSE 3
 
-#define SERVER_IP "192.168.0.0"
+#define SERVER_IP "10.42.0.62"
 #define SERVER_PORT 8080
 
 #define IMAGE_SIZE 784

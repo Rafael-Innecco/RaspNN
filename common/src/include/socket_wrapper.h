@@ -1,5 +1,3 @@
-
-
 #ifndef SOCKETWRAPPER_H
 #define SOCKETWRAPPER_H
 

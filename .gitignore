@@ -1,3 +1,6 @@
+# MNIST Files
+*ubyte
+
 # Prerequisites
 *.d
 
@@ -53,3 +56,5 @@ dkms.conf
 
 #Build
 build/
+
+
