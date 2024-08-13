@@ -1,13 +1,93 @@
 #include "matrix.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "neural_network.h"
+#include "server_fsm.h"
+#include "socket_wrapper.h"
+
 
 #define MATRIX_M 63
 #define MATRIX_N 63
 #define MATRIX_O 9
 
-// Placeholder
+int main_server();
+int main_test();
+
 int main() {
+  printf("Started\n");
+  return main_server();
+}
+
+int main_server() { // CNN Variables
+  float32_t *data_set;
+  float32_t *input_layer_weight, *input_layer_bias;
+  float32_t *hidden_layer1_weight, *hidden_layer1_bias;
+  float32_t *hidden_layer2_weight, *hidden_layer2_bias;
+  int *expected_output, *result, accuracy;
+  int data_set_size, iterations;
+
+  // FSM Variables
+  int state, sock, mode, action_result, server_fd;
+
+  state = INIT;
+
+  printf("Entering state machine\n");
+  while (1) {
+    action_result = action(state, sock, result, data_set_size, &data_set);
+    switch (state) {
+      case INIT:
+        server_fd = action_result;
+        result = &server_fd;
+        break;
+      case LISTEN:
+        sock = action_result;
+        break;
+      case IDLE:
+        mode = action_result;
+        break;
+      case WAIT_TRAIN_DATA:
+        data_set_size = action_result;
+        printf("\033[36mDataset size = %d\n", data_set_size);
+        break;
+      case WAIT_TRAIN_LABELS:
+        expected_output = result;
+        break;
+      case WAIT_TRAIN_ITERATIONS:
+        iterations = action_result;
+        accuracy = train(data_set, expected_output, input_layer_weight,
+                         input_layer_bias, hidden_layer1_weight,
+                         hidden_layer1_bias, hidden_layer2_weight,
+                         hidden_layer2_bias, data_set_size, iterations);
+        result = &accuracy;
+        free(expected_output);
+        free(data_set);
+        break;
+      case SEND_TRAINING_RESULT:
+        break;
+      case WAIT_INFERENCE_DATA:
+        data_set_size = action_result;
+        result =
+            inference(data_set, input_layer_weight, input_layer_bias,
+                      hidden_layer1_weight, hidden_layer1_bias,
+                      hidden_layer2_weight, hidden_layer2_bias, data_set_size);
+        free(data_set);
+        break;
+      case SEND_INFERENCE_RESULT:
+        free(result);
+        break;
+      case END_CONNECTION:
+        result = &server_fd;
+        break;
+      default:
+    }
+    state = next_state(state, mode);
+  }
+
+  return 0;
+}
+
+int main_test() {
 
   float32_t * A = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
   float32_t * altA = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);

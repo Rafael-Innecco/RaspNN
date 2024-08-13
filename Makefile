@@ -23,12 +23,12 @@ RASP_C_OPTIONS = -Irasp/src/include -Icommon/src/include -O2 -g
 DESKTOP_C_OPTIONS = -Idesktop/src/include -Icommon/src/include -O2 -g
 VALGRIND_OPTIONS = -s --leak-check=full --track-origins=yes --show-leak-kinds=all 
 
-all: ${EXEC} ${IMAGE} ${LIST} ${HEXFILE}
+all: compile run 
 
 compile:
-	gcc ${RASP_C_OPTIONS} ${FONTE}math_func.c ${FONTE}matrix.c ${FONTE}main.c -o ${RTARGET}
+	gcc ${RASP_C_OPTIONS} ${CFONTES} ${FONTES} -o ${RTARGET}
 
-run: compile
+run: ${RTARGET}
 	${RTARGET}
 
 check:

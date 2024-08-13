@@ -29,7 +29,7 @@ void forward_propagation(
     float32_t* hidden_layer2, float32_t* hidden_layer2_weight,
     float32_t* hidden_layer2_bias, float32_t* hidden_layer2_pre_activation,
     float32_t* output_layer, int m) {
-  float *Z, transposed;
+  float *Z, *transposed;
   // input layer
   transposed = transpose_matrix(input_layer, INPUT_LAYER_SIZE, m);
   Z = multiply_matrix_matrix(input_layer_weight, transposed, HIDDEN_LAYER1_SIZE,
