@@ -1,5 +1,5 @@
 // C library headers
-#include "client_fsm.h"
+#include "client_cli.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -12,6 +12,14 @@
 int train(int sock, const char *images_path, const char *labels_path) {
   char mode;
   char *images, *labels;
+
+  int data_set_size = get_mnist_images(images_path, &images);
+  if ((data_set_size != get_mnist_labels(labels_path, &labels)) ||
+      (data_set_size == 0)) {
+    printf("Erro ao ler arquivos de treino!\n");
+    return -1;
+  }
+
   // Set Train Mode
   printf("-------- INICIAR TREINO ---------\n");
   mode = TRAIN;
@@ -19,12 +27,6 @@ int train(int sock, const char *images_path, const char *labels_path) {
 
   // Send Train Data Set Size
   printf("-------- ENVIANDO TAMANHO DOS DADOS DE TREINO ---------\n");
-  int data_set_size = get_mnist_images(images_path, &images);
-  if ((data_set_size != get_mnist_labels(labels_path, &labels)) ||
-      (data_set_size == 0)) {
-    printf("Erro ao ler arquivos de treino!\n");
-    return -1;
-  }
   socket_write(sock, (char *)&data_set_size, sizeof(int) / sizeof(char));
 
   // Send Train Data Set
@@ -50,21 +52,24 @@ int train(int sock, const char *images_path, const char *labels_path) {
   return 0;
 }
 
-int inference(int sock, const char *images_path, const char *labels_path) {
+int inference(int sock, const char *images_path, const char *labels_path,
+              int check_predictions) {
   char mode;
   char *images, *labels;
+
+  int data_set_size = get_mnist_images(images_path, &images);
+  if ((data_set_size != get_mnist_labels(labels_path, &labels)) ||
+      (data_set_size == 0)) {
+    printf("Erro ao ler arquivos de inferencia!\n");
+    return -1;
+  }
+
   printf("-------- INICIAR INFERÊNCIA ---------\n");
   mode = INFER;
   socket_write(sock, &mode, sizeof(char));
 
   // Send Inference Data Set Size
   printf("-------- ENVIANDO CONJUNTO DE DADOS PARA INFERENCIA ---------\n");
-  int data_set_size = get_mnist_images(images_path, &images);
-  if ((data_set_size != get_mnist_labels(labels_path, &labels)) ||
-      (data_set_size == 0)) {
-    printf("Erro ao ler arquivos de teste!\n");
-    return -1;
-  }
   socket_write(sock, (char *)&data_set_size, sizeof(int) / sizeof(char));
 
   // Send Inference Data Set
@@ -75,12 +80,19 @@ int inference(int sock, const char *images_path, const char *labels_path) {
   printf("-------- OBTENDO RESULTADO DA INFERENCIA ---------\n");
   char *inference_result = malloc(sizeof(char) * data_set_size);
   socket_read(sock, inference_result, sizeof(char) * data_set_size);
-  // Compare Inference Result With Expected Result
-  int accuracy_ = 0;
-  for (int i = 0; i < sizeof(char) * data_set_size; i++) {
-    if (labels[i] == inference_result[i]) accuracy_++;
+  if (check_predictions ==
+      1) {  // Compare Inference Result With Expected Result
+    int accuracy_ = 0;
+    for (int i = 0; i < sizeof(char) * data_set_size; i++) {
+      if (labels[i] == inference_result[i]) accuracy_++;
+    }
+    printf("Inference Accuracy: %d\n", accuracy_);
+  } else {  // Print Predictions
+    for (int i = 0; i < sizeof(char) * data_set_size; i++) {
+      printf("%d,", inference_result[i]);
+    }
   }
-  printf("Inference Accuracy: %d\n", accuracy_);
+
   free(labels);
   free(inference_result);
   return 0;
@@ -90,7 +102,7 @@ int close_connection(int sock) {
   printf("-------- FECHANDO COMUNICAÇÃO ---------\n");
   char mode = CLOSE;
   socket_write(sock, &mode, sizeof(char));
-  return 0;
+  return 1;
 }
 
 int help(void) {
@@ -100,10 +112,12 @@ int help(void) {
       "-- train_default: Treina com o data set padrao do MNIST\n"
       "-- train_custom <image_path> <label_path>: Treina com o <image_path> e "
       "o <label_path> fornecidos pelo usuario\n"
-      "-- inference_default: Realiza inferencia com o data set padrao do "
+      "-- test_default: Testa a rede neural com o data set padrao do "
       "MNIST\n"
-      "-- inference_custom <image_path> <label_path>: Realiza inferencia com o "
+      "-- test_custom <image_path> <label_path>: Testa a rede neural com o "
       "<image_path> e o <label_path> fornecidos pelo usuario\n"
+      "-- inference <image_path>: Realiza a inferencia com um conjunto de "
+      "imagens dado em <image_path>\n"
       "-- close: encerra o cliente\n");
 
   return 0;
@@ -111,34 +125,38 @@ int help(void) {
 
 int main() {
   int sock = socket_connect(SERVER_IP, SERVER_PORT);
-  char state[STRING_MAX_SIZE] = HELP_STATE;
+  char command[STRING_MAX_SIZE] = HELP_COMMAND;
   char images_path[STRING_MAX_SIZE], labels_path[STRING_MAX_SIZE];
   int result = 0, scanf_result;
   result = help();
-  while (result == 0) {
-    scanf_result = scanf("%s", state);
-    if (strcmp(state, HELP_STATE) == 0) {
+  while (result != 1) {
+    scanf_result = scanf("%s", command);
+    if (strcmp(command, HELP_COMMAND) == 0) {
       result = help();
-    } else if (strcmp(state, TRAIN_DEFAULT_STATE) == 0) {
+    } else if (strcmp(command, TRAIN_DEFAULT_COMMAND) == 0) {
       result = train(sock, MNIST_TRAIN_IMAGES_PATH, MNIST_TRAIN_LABELS_PATH);
-    } else if (strcmp(state, TRAIN_CUSTOM_STATE) == 0) {
+    } else if (strcmp(command, TRAIN_CUSTOM_COMMAND) == 0) {
       scanf_result = scanf("%s", images_path);
       scanf_result = scanf("%s", labels_path);
       result = train(sock, images_path, labels_path);
-    } else if (strcmp(state, INFERENCE_DEFAULT_STATE) == 0) {
-      result = inference(sock, MNIST_TEST_IMAGES_PATH, MNIST_TEST_LABELS_PATH);
-    } else if (strcmp(state, INFERENCE_CUSTOM_STATE) == 0) {
+    } else if (strcmp(command, TEST_DEFAULT_COMMAND) == 0) {
+      result =
+          inference(sock, MNIST_TEST_IMAGES_PATH, MNIST_TEST_LABELS_PATH, 1);
+    } else if (strcmp(command, TEST_CUSTOM_COMMAND) == 0) {
       scanf_result = scanf("%s", images_path);
       scanf_result = scanf("%s", labels_path);
-      result = inference(sock, images_path, labels_path);
-    } else if (strcmp(state, CLOSE_STATE) == 0) {
+      result = inference(sock, images_path, labels_path, 1);
+    } else if (strcmp(command, INFERENCE_COMMAND) == 0) {
+      scanf_result = scanf("%s", images_path);
+      result = inference(sock, images_path, labels_path, 0);
+    } else if (strcmp(command, CLOSE_COMMAND) == 0) {
       result = close_connection(sock);
       return 0;
     } else {
       result = help();
     }
-    printf("Envie um novo comando!\n");
+    printf("#");
   }
-  printf("Houve um erro na execução da tarefa solicitada!\n");
+  printf("Encerrando a Aplicação!\n");
   return 0;
 };
