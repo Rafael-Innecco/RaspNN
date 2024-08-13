@@ -10,6 +10,7 @@
 
 #define STRING_MAX_SIZE 1000
 #define HELP_COMMAND "help"
+#define CONNECT_COMMAND "connect"
 #define TRAIN_DEFAULT_COMMAND "train_default"
 #define TRAIN_CUSTOM_COMMAND "train_custom"
 #define TEST_DEFAULT_COMMAND "test_default"
@@ -22,7 +23,7 @@
 #define INFER 2
 #define CLOSE 3
 
-#define SERVER_IP "10.42.0.62"
+#define SERVER_IP "127.0.0.0"
 #define SERVER_PORT 8080
 
 #define IMAGE_SIZE 784

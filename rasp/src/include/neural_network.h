@@ -10,10 +10,10 @@
 
 #define LEARNING_RATE 0.1
 
-int train(float32_t* train_set, const int* expected_output,
-          float32_t* input_layer_weight, float32_t* input_layer_bias,
-          float32_t* hidden_layer1_weight, float32_t* hidden_layer1_bias,
-          float32_t* hidden_layer2_weight, float32_t* hidden_layer2_bias,
+int train(float32_t* train_set, int* expected_output,
+          float32_t** input_layer_weight, float32_t** input_layer_bias,
+          float32_t** hidden_layer1_weight, float32_t** hidden_layer1_bias,
+          float32_t** hidden_layer2_weight, float32_t** hidden_layer2_bias,
           const int train_set_size, const int iterations);
 
 int* inference(float32_t* input_layer, float32_t* input_layer_weight,

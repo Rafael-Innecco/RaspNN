@@ -109,6 +109,8 @@ int help(void) {
   printf(
       "Digite o Modo de Operacao Desejado:\n"
       "-- help: Exibe informacoes sobre o funcionamento desse programa\n"
+      "-- connect <ip> <port>: conecta a um servidor com IPv4 <ip> e porta "
+      "<port>\n "
       "-- train_default: Treina com o data set padrao do MNIST\n"
       "-- train_custom <image_path> <label_path>: Treina com o <image_path> e "
       "o <label_path> fornecidos pelo usuario\n"
@@ -126,36 +128,41 @@ int help(void) {
 int main() {
   int sock = socket_connect(SERVER_IP, SERVER_PORT);
   char command[STRING_MAX_SIZE] = HELP_COMMAND;
-  char images_path[STRING_MAX_SIZE], labels_path[STRING_MAX_SIZE];
+  char arg1[STRING_MAX_SIZE], arg2[STRING_MAX_SIZE];
   int result = 0, scanf_result;
   result = help();
+  result = train(sock, MNIST_TRAIN_IMAGES_PATH, MNIST_TRAIN_LABELS_PATH);
   while (result != 1) {
+    printf("#");
     scanf_result = scanf("%s", command);
     if (strcmp(command, HELP_COMMAND) == 0) {
       result = help();
+    } else if (strcmp(command, CONNECT_COMMAND) == 0) {
+      scanf_result = scanf("%s", arg1);
+      scanf_result = scanf("%s", arg2);
+      sock = socket_connect(arg1, atoi(arg2));
     } else if (strcmp(command, TRAIN_DEFAULT_COMMAND) == 0) {
       result = train(sock, MNIST_TRAIN_IMAGES_PATH, MNIST_TRAIN_LABELS_PATH);
     } else if (strcmp(command, TRAIN_CUSTOM_COMMAND) == 0) {
-      scanf_result = scanf("%s", images_path);
-      scanf_result = scanf("%s", labels_path);
-      result = train(sock, images_path, labels_path);
+      scanf_result = scanf("%s", arg1);
+      scanf_result = scanf("%s", arg2);
+      result = train(sock, arg1, arg2);
     } else if (strcmp(command, TEST_DEFAULT_COMMAND) == 0) {
       result =
           inference(sock, MNIST_TEST_IMAGES_PATH, MNIST_TEST_LABELS_PATH, 1);
     } else if (strcmp(command, TEST_CUSTOM_COMMAND) == 0) {
-      scanf_result = scanf("%s", images_path);
-      scanf_result = scanf("%s", labels_path);
-      result = inference(sock, images_path, labels_path, 1);
+      scanf_result = scanf("%s", arg1);
+      scanf_result = scanf("%s", arg2);
+      result = inference(sock, arg1, arg2, 1);
     } else if (strcmp(command, INFERENCE_COMMAND) == 0) {
-      scanf_result = scanf("%s", images_path);
-      result = inference(sock, images_path, labels_path, 0);
+      scanf_result = scanf("%s", arg1);
+      result = inference(sock, arg1, arg2, 0);
     } else if (strcmp(command, CLOSE_COMMAND) == 0) {
       result = close_connection(sock);
       return 0;
     } else {
       result = help();
     }
-    printf("#");
   }
   printf("Encerrando a Aplicação!\n");
   return 0;
