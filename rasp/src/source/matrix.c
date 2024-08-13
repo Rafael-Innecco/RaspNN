@@ -182,7 +182,7 @@ void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
 
 float32_t max_vector_fast(float32_t* A, const int n) {
   float32_t max = -1.0 * FLOAT_MAX;
-  int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
+  int m = (n % 8) ? ((n >> 1) + 1) : (n >> 1);  // m = ceil(n/8)
   int n_iter = n - n % 8;
   int i;
   for (i = 0; i < n_iter; i += 8) {
@@ -204,7 +204,7 @@ float32_t max_vector_fast(float32_t* A, const int n) {
 
 float32_t min_vector_fast(float32_t* A, const int n) {
   float32_t min = FLOAT_MAX;
-  int m = (n % 8) ? ((n >> 3) + 1) : (n >> 3);  // m = ceil(n/8)
+  int m = (n % 8) ? ((n >> 1) + 1) : (n >> 1);  // m = ceil(n/8)
   int n_iter = n - n % 8;
   int i;
   for (i = 0; i < n_iter; i += 8) {

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MATRIX_M 5
-#define MATRIX_N 7
+#define MATRIX_M 63
+#define MATRIX_N 63
 #define MATRIX_O 9
 
 // Placeholder
@@ -49,12 +49,12 @@ int main() {
 
   printf("\033[36mMatrizes operando:\n");
   print_matrix(A, MATRIX_M, MATRIX_N);
-  print_matrix(B, MATRIX_M, MATRIX_N);
-  print_matrix(fvec, MATRIX_M, 1);
+  // print_matrix(B, MATRIX_M, MATRIX_N);
+  // print_matrix(fvec, MATRIX_M, 1);
   // print_matrix(D, MATRIX_O, MATRIX_N);
   // print_int_matrix(intA, MATRIX_M, 1);
   // print_int_matrix(intB, MATRIX_M, 1);
-  print_int_matrix(intMA, MATRIX_M, MATRIX_N);
+  // print_int_matrix(intMA, MATRIX_M, MATRIX_N);
   printf("\033[0m\n");
 
   // float32_t * scalarA = multiply_matrix_scalar(A, -2.85, MATRIX_M, MATRIX_N);
@@ -101,16 +101,25 @@ int main() {
   // print_matrix(reduxB, MATRIX_M, 1);
   // printf("\033[33mredux intMA\n");
   // print_int_matrix(reduxIntMA, MATRIX_M, 1);
-  printf("\033[34mSum A fvec\n");
-  print_matrix(sumAvec, MATRIX_M, MATRIX_N);
-  printf("\033[35mHadamard A B\n");
-  print_matrix(hadamard, MATRIX_M, MATRIX_N);
+  // printf("\033[34mSum A fvec\n");
+  // print_matrix(sumAvec, MATRIX_M, MATRIX_N);
+  // printf("\033[35mHadamard A B\n");
+  // print_matrix(hadamard, MATRIX_M, MATRIX_N);
   printf("\033[0m");
 
 
   free(A);
   free(B);
+  free(fvec);
   free(altA);
+  free(D);
+  free(intA);
+  free(intB);
+  free(intMA);
+
+  free(minMaxA);
+  free(sumAvec);
+  free(hadamard);
   // free(transposeB);
   return 0;
 }
