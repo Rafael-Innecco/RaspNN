@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "mnist_file.h"
-#include "server_fsm.h"
 #include "socket_wrapper.h"
 
 int train(int sock, const char *images_path, const char *labels_path) {

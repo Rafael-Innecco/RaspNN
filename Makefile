@@ -40,7 +40,7 @@ assmeble:
 	gcc -Irasp/src/include -Icommon/src/include -O2 -S ${FONTE}main.c -o rasp/${BUILDDIR}/main.s
 
 build_client:
-	gcc ${DESKTOP_C_OPTIONS} ${DFONTES} -o ${DTARGET}
+	gcc ${DESKTOP_C_OPTIONS} ${CFONTES} ${DFONTES} -o ${DTARGET}
 	
 #
 # Limpar tudo

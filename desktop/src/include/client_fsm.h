@@ -16,4 +16,14 @@
 #define INFERENCE_CUSTOM_STATE "inference_custom"
 #define CLOSE_STATE "close"
 
+#define NONE 0
+#define TRAIN 1
+#define INFER 2
+#define CLOSE 3
+
+#define SERVER_IP "192.168.0.0"
+#define SERVER_PORT 8080
+
+#define IMAGE_SIZE 784
+
 #endif  // CLIENTFSM_H
