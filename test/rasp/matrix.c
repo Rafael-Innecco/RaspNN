@@ -31,13 +31,13 @@ void sum_matrix(const float* A, const float* B, float* C, const int m,
 }
 
 /***
- * O vetor B deve ter dimensão M x 1
+ * O vetor B deve ter dimensão N x 1
  ***/
 void sum_matrix_vector(const float* A, const float* B, float* C, const int m,
                        const int n) {
   for (int i = 0; i < m; i++) {
     for (int j = 0; j < n; j++) {
-      C[n * i + j] = A[n + i + j] + B[i];
+      C[n * i + j] = A[n * i + j] + B[j];
     }
   }
 
@@ -124,14 +124,14 @@ void minmax_matrix(const float* A, float* B, const int m, const int n) {
 
 void softmax_matrix(const float* A, float* B, const int m, const int n) {
   float sum;
-  for (int j = 0; j < n; j++) {
+  for (int i = 0; i < m; i++) {
     sum = 0.0;
 
-    for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
       sum += exp(A[n * i + j]);
     }
 
-    for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
       B[n * i + j] = exp(A[n * i + j]) / sum;
     }
   }
@@ -147,7 +147,7 @@ void copy_vector(const float* A, float* B, const int n) {
 void one_hot_matrix(const int* A, float* B, const int m, const int n) {
   init_matrix(B, 0.0, m, n);
   for (int i = 0; i < n; i++) {
-    B[n * A[i] + i] = 1.0;
+    B[n * i + A[i]] = 1.0;
   }
   return;
 }
@@ -216,7 +216,7 @@ void print_matrix(const float* A, int m, int n) {
   printf("\n");
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      printf("\t%3.4f ", A[n * i + j]);
+      printf("\t%3.2f ", A[n * i + j]);
     }
     printf("\n");
   }

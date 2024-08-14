@@ -11,3 +11,7 @@ all:
 run: all
 	clear
 	./main
+
+valgrind: all
+	clear
+	valgrind -s --leak-check=full --track-origins=yes --show-leak-kinds=all ./main

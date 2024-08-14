@@ -6,8 +6,10 @@
 #include "matrix.h"
 
 void random_params(neural_network_t* cnn) {
-  init_matrix_random(cnn->W1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
-  init_matrix_random(cnn->b1, OUTPUT_LAYER_SIZE, 1);
+  init_matrix(cnn->W1, 0.5, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  init_matrix(cnn->b1, 0.5, OUTPUT_LAYER_SIZE, 1);
+  // init_matrix_random(cnn->W1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  // init_matrix_random(cnn->b1, OUTPUT_LAYER_SIZE, 1);
   // init_matrix_random(cnn->W2, OUTPUT_LAYER_SIZE, HIDDEN_LAYER1_SIZE);
   // init_matrix_random(cnn->b2, OUTPUT_LAYER_SIZE, 1);
   return;
@@ -45,15 +47,14 @@ void forward_propagation(const float* X, neural_network_t* cnn,
 
 void forward_propagation2(const float* X, neural_network_t* cnn,
                           neural_network_layers_t* layers, int m) {
-  float *T, *M;
+  float* M;
   // input layer
-  T = malloc(sizeof(float) * INPUT_LAYER_SIZE * m);
   M = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * m);
-  transpose_matrix(X, T, INPUT_LAYER_SIZE, m);
-  multiply_matrix_matrix(cnn->W1, T, M, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE, m);
-  sum_matrix_vector(M, cnn->b1, layers->Z1, OUTPUT_LAYER_SIZE, m);
-  softmax_matrix(layers->Z1, layers->A1, OUTPUT_LAYER_SIZE, m);
-  free(T);
+  // transpose_matrix(X, T, INPUT_LAYER_SIZE, m);
+  multiply_matrix_matrix(X, cnn->W1, M, m, INPUT_LAYER_SIZE, OUTPUT_LAYER_SIZE);
+  sum_matrix_vector(M, cnn->b1, layers->Z1, m, OUTPUT_LAYER_SIZE);
+  softmax_matrix(layers->Z1, layers->A1, m, OUTPUT_LAYER_SIZE);
+  // print_matrix(M, m, OUTPUT_LAYER_SIZE);
   free(M);
   return;
 }
@@ -104,17 +105,25 @@ void backward_propagation2(const float* X, const float* Y,
                            neural_network_t* cnn,
                            neural_network_gradient_t* dcnn,
                            neural_network_layers_t* layers, int m) {
-  float* dZ;
+  float *dZ, *dZT, *XT;
   // Calculo dos dZ's
   dZ = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * m);
-  diff_matrix(layers->A1, Y, dZ, OUTPUT_LAYER_SIZE, m);
+  diff_matrix(layers->A1, Y, dZ, m, OUTPUT_LAYER_SIZE);
   // print_matrix_parcial(dZ, OUTPUT_LAYER_SIZE, m, 10);
   //  Calculo das saidas
   //  dW1
-  multiply_matrix_matrix(dZ, X, dcnn->dW1, OUTPUT_LAYER_SIZE, m,
+  dZT = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * m);
+  transpose_matrix(dZ, dZT, m, OUTPUT_LAYER_SIZE);
+  XT = malloc(sizeof(float) * INPUT_LAYER_SIZE * m);
+  transpose_matrix(X, XT, m, INPUT_LAYER_SIZE);
+  multiply_matrix_matrix(dZT, XT, dcnn->dW1, OUTPUT_LAYER_SIZE, m,
                          INPUT_LAYER_SIZE);
-  // dB1
-  matrix_redux_float(dZ, dcnn->db1, OUTPUT_LAYER_SIZE, m);
+  print_matrix(dcnn->dW1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  printf("\n-------------------------------------------------------\n");
+  //  dB1
+  matrix_redux_float(dZT, dcnn->db1, OUTPUT_LAYER_SIZE, m);
+  free(dZT);
+  free(XT);
   free(dZ);
   return;
 }
@@ -123,12 +132,12 @@ void parameter_update(neural_network_t* cnn, neural_network_gradient_t* dcnn,
                       int m) {
   float rate = ((float)-LEARNING_RATE) / ((float)m);
   // printf("Taxa de aprendizado: %.3f\n", rate);
-  print_matrix(dcnn->dW1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  // print_matrix(dcnn->dW1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
   sum_multiply_matrix_scalar_fast(cnn->W1, dcnn->dW1, rate, OUTPUT_LAYER_SIZE,
                                   INPUT_LAYER_SIZE);
   // print_matrix_parcial(cnn->W1, HIDDEN_LAYER1_SIZE, INPUT_LAYER_SIZE, 10);
-  sum_multiply_matrix_scalar_fast(cnn->b1, dcnn->db1, rate, OUTPUT_LAYER_SIZE,
-                                  1);
+  sum_multiply_matrix_scalar_fast(cnn->b1, dcnn->db1, rate, 1,
+                                  OUTPUT_LAYER_SIZE);
   // sum_multiply_matrix_scalar_fast(cnn->W2, dcnn->dW2, rate,
   // HIDDEN_LAYER2_SIZE,
   //                                 HIDDEN_LAYER1_SIZE);
@@ -143,12 +152,15 @@ void get_predictions(const float* output_layer, int* predictions, int m) {
   for (int i = 0; i < m; i++) {
     float max = -1.0 * FLOAT_MAX;
     for (int j = 0; j < OUTPUT_LAYER_SIZE; j++) {
-      if (output_layer[m * j + i] > max) {
+      if (output_layer[OUTPUT_LAYER_SIZE * i + j] > max) {
         predictions[i] = j;
-        max = output_layer[m * j + i];
+        max = output_layer[OUTPUT_LAYER_SIZE * i + j];
       }
     }
   }
+  printf("Predictions: ");
+  for (int i = 0; i < m; i++) printf("%d, ", predictions[i]);
+  printf("\n");
   return;
 }
 
@@ -184,7 +196,7 @@ int train(float* X, int* Y, neural_network_t* cnn, const int set_size,
   neural_network_gradient_t dcnn;
   neural_network_layers_t layers;
   batch_t batch;
-  predictions = malloc(sizeof(int) * set_size);
+  predictions = malloc(sizeof(int) * BATCH_SIZE);
   layers.Z1 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * BATCH_SIZE);
   layers.A1 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * BATCH_SIZE);
   // layers.Z2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * BATCH_SIZE);
@@ -193,17 +205,18 @@ int train(float* X, int* Y, neural_network_t* cnn, const int set_size,
   number_of_batches = set_size / BATCH_SIZE;
   random_params(cnn);
   for (int i = 0; i < iterations; i++) {
-    m = init_batch(X, Y, &batch, i % BATCH_SIZE, set_size);
+    m = init_batch(X, Y, &batch, i % number_of_batches, set_size);
     printf("Iteration: %d\n", i);
     printf("Tamanho do batch: %d\n", m);
     // printf("Endereco dos pesos 1: %p\n", cnn->W1);
     //  print_matrix_parcial(cnn->W1, HIDDEN_LAYER1_SIZE, INPUT_LAYER_SIZE, 10);
     // fflush(stdout);
-    one_hot_matrix(batch.Y, Y_one_hot, OUTPUT_LAYER_SIZE, m);
+    one_hot_matrix(batch.Y, Y_one_hot, m, OUTPUT_LAYER_SIZE);
     // print_matrix_parcial(batch.X, 10, m, 20);
     forward_propagation2(batch.X, cnn, &layers, m);
     backward_propagation2(batch.X, Y_one_hot, cnn, &dcnn, &layers, m);
     parameter_update(cnn, &dcnn, m);
+    // print_matrix(layers.A1, m, OUTPUT_LAYER_SIZE);
     get_predictions(layers.A1, predictions, m);
     accuracy = get_accuracy(predictions, batch.Y, m);
     printf("Accuracy: %f\n", ((float)accuracy) / ((float)m));
@@ -222,14 +235,14 @@ int* inference(const float* X, neural_network_t* cnn, const int set_size) {
   int* predictions;
   layers.Z1 = malloc(sizeof(float) * HIDDEN_LAYER1_SIZE * set_size);
   layers.A1 = malloc(sizeof(float) * HIDDEN_LAYER1_SIZE * set_size);
-  layers.Z2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * set_size);
-  layers.A2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * set_size);
+  // layers.Z2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * set_size);
+  // layers.A2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * set_size);
   forward_propagation(X, cnn, &layers, set_size);
   predictions = malloc(sizeof(int) * set_size);
-  get_predictions(layers.A2, predictions, set_size);
+  get_predictions(layers.A1, predictions, set_size);
   free(layers.Z1);
   free(layers.A1);
-  free(layers.Z2);
-  free(layers.A2);
+  // free(layers.Z2);
+  // free(layers.A2);
   return predictions;
 }
