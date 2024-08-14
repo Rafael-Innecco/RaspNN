@@ -217,7 +217,8 @@ float32_t min_vector_fast(float32_t* A, const int n) {
 
 void minmax_matrix(const float32_t* A, float32_t* C, const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
-  float32_t* A_T = transpose_matrix(A, m, n);
+  float32_t* A_T = malloc(sizeof(float32_t) * n * m); 
+  transpose_matrix(A, A_T, m, n);
   float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
   int i, j;
@@ -378,13 +379,13 @@ void multiply_matrix_hadamard(const float32_t* A, const float32_t* B, float32_t*
 }
 
 void compare_vector(const int* A, const int* B, int* compare, const int n) {
-  int i, j;
+  int j;
   int n_iter = n - n % 4;
   int32x4_t zeros = vmovq_n_s32(0);
   int32x4_t ones = vmovq_n_s32(1);
   for (j = 0; j < n_iter; j += 4) {
-    int32x4_t a = vld1q_s32(A + i);
-    int32x4_t b = vld1q_s32(B + i);
+    int32x4_t a = vld1q_s32(A + j);
+    int32x4_t b = vld1q_s32(B + j);
     // Checar o compilado
     int32x4_t equal = vbslq_s32(vceqq_s32(a, b), ones, zeros);
     vst1q_s32(compare + j, equal);
@@ -396,7 +397,7 @@ void compare_vector(const int* A, const int* B, int* compare, const int n) {
   }
 }
 
-void matrix_redux_float(const float32_t* A, float32_t* B, const int n, const int m) {
+void matrix_redux_float(const float32_t* A, float32_t* B, const int m, const int n) {
   int i, j;
   float32x4_t sum;
   float32_t result;
@@ -423,7 +424,7 @@ void matrix_redux_float(const float32_t* A, float32_t* B, const int n, const int
   }
 }
 
-void matrix_redux_int(const int* A, int* B, const int n, const int m) {
+void matrix_redux_int(const int* A, int* B, const int m, const int n) {
   int i, j;
   int32x4_t sum;
   int result;

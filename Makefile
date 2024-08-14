@@ -28,6 +28,9 @@ all: compile run
 compile:
 	gcc ${RASP_C_OPTIONS} ${CFONTES} ${FONTES} -o ${RTARGET}
 
+tests:
+	gcc ${RASP_C_OPTIONS} ${FONTE}math_func.c ${FONTE}matrix.c ${FONTE}main.c -o ${RTARGET}
+
 run: ${RTARGET}
 	${RTARGET}
 
