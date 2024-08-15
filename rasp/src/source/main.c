@@ -6,8 +6,8 @@
 #include "server_fsm.h"
 #include "socket_wrapper.h"
 
-#define MATRIX_M 11
-#define MATRIX_N 10
+#define MATRIX_M 13
+#define MATRIX_N 11
 #define MATRIX_O 9
 
 int main_server();
@@ -15,14 +15,12 @@ int main_test();
 
 int main() {
   printf("Started\n");
-  return main_test();
+  return main_server();
 }
 
 int main_server() {  // CNN Variables
-  float32_t *data_set;
-  float32_t *input_layer_weight, *input_layer_bias;
-  float32_t *hidden_layer1_weight, *hidden_layer1_bias;
-  float32_t *hidden_layer2_weight, *hidden_layer2_bias;
+  float *data_set;
+  neural_network_t cnn;
   int *expected_output, *result, accuracy;
   int data_set_size, iterations;
 
@@ -48,17 +46,14 @@ int main_server() {  // CNN Variables
       case WAIT_TRAIN_DATA:
         data_set_size = action_result;
         result = malloc((sizeof(int) * data_set_size));
-        printf("\033[36mDataset size = %d\n", data_set_size);
         break;
       case WAIT_TRAIN_LABELS:
         expected_output = result;
         break;
       case WAIT_TRAIN_ITERATIONS:
         iterations = action_result;
-        accuracy = train(data_set, expected_output, &input_layer_weight,
-                         &input_layer_bias, &hidden_layer1_weight,
-                         &hidden_layer1_bias, &hidden_layer2_weight,
-                         &hidden_layer2_bias, data_set_size, iterations);
+        accuracy =
+            train(data_set, expected_output, &cnn, data_set_size, iterations);
         result = &accuracy;
         free(expected_output);
         free(data_set);
@@ -67,10 +62,7 @@ int main_server() {  // CNN Variables
         break;
       case WAIT_INFERENCE_DATA:
         data_set_size = action_result;
-        result =
-            inference(data_set, input_layer_weight, input_layer_bias,
-                      hidden_layer1_weight, hidden_layer1_bias,
-                      hidden_layer2_weight, hidden_layer2_bias, data_set_size);
+        result = inference(data_set, &cnn, data_set_size);
         free(data_set);
         break;
       case SEND_INFERENCE_RESULT:
@@ -92,7 +84,7 @@ int main_test() {
   float32_t *altA = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
   float32_t *B = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
   float32_t *D = malloc(sizeof(float32_t) * MATRIX_O * MATRIX_N);
-  float32_t *fvec = malloc(sizeof(float32_t) * MATRIX_M);
+  float32_t *fvec = malloc(sizeof(float32_t) * MATRIX_N);
 
   int *intA = malloc(sizeof(int) * MATRIX_M);
   int *intB = malloc(sizeof(int) * MATRIX_M);
@@ -112,7 +104,6 @@ int main_test() {
 
       intMA[MATRIX_N * i + j] = 13 * (i + 1) * (j + 1) % 17;
     }
-    fvec[i] = (MATRIX_M * 1.0 * i) / (MATRIX_N);
 
     int x = MATRIX_M - i;
     intA[i] = (x * x) % 10;
@@ -125,14 +116,18 @@ int main_test() {
     }
   }
 
+  for (i = 0; i < MATRIX_N; i++) {
+    fvec[i] = (MATRIX_M * 1.0 * i) / (MATRIX_N);
+  }
+
   printf("\033[36mMatrizes operando:\n");
   print_matrix(A, MATRIX_M, MATRIX_N);
-  print_matrix(B, MATRIX_M, MATRIX_N);
-  print_matrix(fvec, MATRIX_M, 1);
-  print_matrix(D, MATRIX_O, MATRIX_N);
-  print_int_matrix(intA, 1, MATRIX_M);
-  print_int_matrix(intB, 1, MATRIX_M);
-  print_int_matrix(intMA, MATRIX_M, MATRIX_N);
+  // print_matrix(B, MATRIX_M, MATRIX_N);
+  print_matrix(fvec, 1, MATRIX_N);
+  // print_matrix(D, MATRIX_O, MATRIX_N);
+  // print_int_matrix(intA, 1, MATRIX_M);
+  // print_int_matrix(intB, 1, MATRIX_M);
+  // print_int_matrix(intMA, MATRIX_M, MATRIX_N);
   printf("\033[0m\n");
 
   float32_t* result = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
@@ -141,61 +136,61 @@ int main_test() {
   float32_t* oneHotA = malloc(sizeof(float32_t) * 10 * MATRIX_M);
   int* resultIntVec = malloc(sizeof(int) * MATRIX_M);
 
-  multiply_matrix_scalar(A, result, -2.85, MATRIX_M, MATRIX_N);
-  printf("\033[33mScalar multiplication A\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
+  //multiply_matrix_scalar(A, result, -2.85, MATRIX_M, MATRIX_N);
+  //printf("\033[33mScalar multiplication A\n");
+  //print_matrix(result, MATRIX_M, MATRIX_N);
 
-  relu_matrix(A, result, MATRIX_M, MATRIX_N);
-  printf("\033[34mReLU A\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
-  
-  sum_matrix(A, B, result, MATRIX_M, MATRIX_N);
-  printf("\033[35mSum A + B\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
+  //relu_matrix(A, result, MATRIX_M, MATRIX_N);
+  //printf("\033[34mReLU A\n");
+  //print_matrix(result, MATRIX_M, MATRIX_N);
+  //
+  //sum_matrix(A, B, result, MATRIX_M, MATRIX_N);
+  //printf("\033[35mSum A + B\n");
+  //print_matrix(result, MATRIX_M, MATRIX_N);
 
-  diff_matrix(A, B, result, MATRIX_M, MATRIX_N);
-  printf("\033[31mdiff A - B\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
+  //diff_matrix(A, B, result, MATRIX_M, MATRIX_N);
+  //printf("\033[31mdiff A - B\n");
+  //print_matrix(result, MATRIX_M, MATRIX_N);
 
-  relu_derivate_matrix(A, result, MATRIX_M, MATRIX_N);
-  printf("\033[34mReLU derivate A\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
-  
-  sum_multiply_matrix_scalar_fast(altA, B, 5.7, MATRIX_M, MATRIX_N);
+  //relu_derivate_matrix(A, result, MATRIX_M, MATRIX_N);
+  //printf("\033[34mReLU derivate A\n");
+  //print_matrix(result, MATRIX_M, MATRIX_N);
+  //
+  //sum_multiply_matrix_scalar_fast(altA, B, 5.7, MATRIX_M, MATRIX_N);
   // printf("\033[33mA + x * B\n");
   // print_matrix(altA, MATRIX_M, MATRIX_N);
   
-  transpose_matrix(B, result, MATRIX_M, MATRIX_N);
-  printf("\033[31mTraspose B\n");
-  print_matrix(result, MATRIX_N, MATRIX_M);
+  // transpose_matrix(B, result, MATRIX_M, MATRIX_N);
+  // printf("\033[31mTraspose B\n");
+  // print_matrix(result, MATRIX_N, MATRIX_M);
 
-  minmax_matrix(A, result, MATRIX_M, MATRIX_N);
-  printf("\033[33mMinMax A\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
+  // minmax_matrix(A, result, MATRIX_M, MATRIX_N);
+  // printf("\033[33mMinMax A\n");
+  // print_matrix(result, MATRIX_M, MATRIX_N);
 
-  multiply_matrix_matrix(A, D, resultMult, MATRIX_M, MATRIX_N, MATRIX_O); 
-  printf("\033[34mA x D\n");
-  print_matrix(resultMult, MATRIX_M, MATRIX_O);
+  // multiply_matrix_matrix(A, D, resultMult, MATRIX_M, MATRIX_N, MATRIX_O); 
+  // printf("\033[34mA x D\n");
+  // print_matrix(resultMult, MATRIX_M, MATRIX_O);
 
-  matrix_redux_float(B, resultReduxB, MATRIX_M, MATRIX_N);
-  printf("\033[31mredux B\n");
-  print_matrix(resultReduxB, MATRIX_M, 1);
+  // matrix_redux_float(B, resultReduxB, MATRIX_M, MATRIX_N);
+  // printf("\033[31mredux B\n");
+  // print_matrix(resultReduxB, MATRIX_M, 1);
 
-  one_hot_matrix(intA, oneHotA, 10, MATRIX_M);
-  printf("\033[35moneHot A\n");
-  print_matrix(oneHotA, 10, MATRIX_M);
+  // one_hot_matrix(intA, oneHotA, MATRIX_M, 10);
+  // printf("\033[35moneHot A\n");
+  // print_matrix(oneHotA, MATRIX_M, 10);
 
-  multiply_matrix_hadamard(A, B, result, MATRIX_M, MATRIX_N);
-  printf("\033[35mHadamard A B\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
+  // multiply_matrix_hadamard(A, B, result, MATRIX_M, MATRIX_N);
+  // printf("\033[35mHadamard A B\n");
+  // print_matrix(result, MATRIX_M, MATRIX_N);
 
-  compare_vector(intA, intB, resultIntVec,  MATRIX_M);
-  printf("\033[35mCompare intA intB\n");
-  print_int_matrix(resultIntVec, 1, MATRIX_M);
+  // compare_vector(intA, intB, resultIntVec,  MATRIX_M);
+  // printf("\033[35mCompare intA intB\n");
+  // print_int_matrix(resultIntVec, 1, MATRIX_M);
 
-  matrix_redux_int(intMA, resultIntVec, MATRIX_M, MATRIX_N);
-  printf("\033[33mredux intMA\n");
-  print_int_matrix(resultIntVec, MATRIX_M, 1);
+  // matrix_redux_int(intMA, resultIntVec, MATRIX_M, MATRIX_N);
+  // printf("\033[33mredux intMA\n");
+  // print_int_matrix(resultIntVec, MATRIX_M, 1);
 
   sum_matrix_vector(A, fvec, result, MATRIX_M, MATRIX_N);
   printf("\033[34mSum A fvec\n");

@@ -26,7 +26,7 @@ VALGRIND_OPTIONS = -s --leak-check=full --track-origins=yes --show-leak-kinds=al
 all: compile run 
 
 compile:
-	gcc ${RASP_C_OPTIONS} ${CFONTES} ${FONTES} -o ${RTARGET}
+	gcc ${RASP_C_OPTIONS} ${CFONTES} ${FONTES} -o ${RTARGET} -lm
 
 tests:
 	gcc ${RASP_C_OPTIONS} ${FONTE}math_func.c ${FONTE}matrix.c ${FONTE}main.c -o ${RTARGET}

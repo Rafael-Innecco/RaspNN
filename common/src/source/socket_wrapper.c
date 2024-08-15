@@ -75,9 +75,9 @@ int socket_listen(int port, int handler, struct sockaddr_in* address) {
   return new_socket;
 }
 
-void socket_read(int sock, char* buf, ssize_t size) {
+void socket_read(int sock, uint8_t* buf, ssize_t size) {
   ssize_t i = 0, num_bytes = (size > MTU) ? MTU : size;
-  printf("Lendo %d bytes\n", size);
+  printf("Lendo %ld bytes\n", size);
   while (i < size) {
     num_bytes = read(sock, &buf[i], num_bytes);
     if (num_bytes > 0) i += num_bytes;
@@ -87,9 +87,9 @@ void socket_read(int sock, char* buf, ssize_t size) {
   return;
 }
 
-void socket_write(int sock, char* buf, ssize_t size) {
+void socket_write(int sock, uint8_t* buf, ssize_t size) {
   ssize_t i = 0, num_bytes = (size > MTU) ? MTU : size;
-  printf("Escrevendo %d bytes\n", size);
+  printf("Escrevendo %ld bytes\n", size);
   while (i < size) {
     num_bytes = send(sock, &buf[i], num_bytes, 0);
     if (num_bytes >= 0) i += num_bytes;

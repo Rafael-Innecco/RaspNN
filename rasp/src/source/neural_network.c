@@ -6,270 +6,142 @@
 
 #include "matrix.h"
 
-void random_params(float32_t** input_layer_weight, float32_t** input_layer_bias,
-                   float32_t** hidden_layer1_weight,
-                   float32_t** hidden_layer1_bias,
-                   float32_t** hidden_layer2_weight,
-                   float32_t** hidden_layer2_bias) {
-  *input_layer_weight =
-      init_matrix_random(HIDDEN_LAYER1_SIZE, INPUT_LAYER_SIZE);
-  *input_layer_bias = init_matrix_random(HIDDEN_LAYER1_SIZE, 1);
-  *hidden_layer1_weight =
-      init_matrix_random(HIDDEN_LAYER2_SIZE, HIDDEN_LAYER1_SIZE);
-  *hidden_layer1_bias = init_matrix_random(HIDDEN_LAYER2_SIZE, 1);
-  *hidden_layer2_weight =
-      init_matrix_random(OUTPUT_LAYER_SIZE, HIDDEN_LAYER2_SIZE);
-  *hidden_layer2_bias = init_matrix_random(OUTPUT_LAYER_SIZE, 1);
+void random_params(neural_network_t* cnn) {
+  // init_matrix(cnn->W1, 0.5, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  // init_matrix(cnn->b1, 0.5, OUTPUT_LAYER_SIZE, 1);
+  init_matrix_random(cnn->W1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  init_matrix_random(cnn->b1, OUTPUT_LAYER_SIZE, 1);
+  init_matrix_random(cnn->W2, OUTPUT_LAYER_SIZE, HIDDEN_LAYER1_SIZE);
+  init_matrix_random(cnn->b2, OUTPUT_LAYER_SIZE, 1);
   return;
 }
 
-void forward_propagation(
-    float32_t* input_layer, float32_t* input_layer_weight,
-    float32_t* input_layer_bias, float32_t** input_layer_pre_activation,
-    float32_t** hidden_layer1, float32_t* hidden_layer1_weight,
-    float32_t* hidden_layer1_bias, float32_t** hidden_layer1_pre_activation,
-    float32_t** hidden_layer2, float32_t* hidden_layer2_weight,
-    float32_t* hidden_layer2_bias, float32_t** hidden_layer2_pre_activation,
-    float32_t** output_layer, int m) {
-  float32_t *Z, *transposed;
+void forward_propagation(const float32_t* X, neural_network_t* cnn,
+                          neural_network_layers_t* layers, int m) {
+  float32_t* M;
   // input layer
-  transposed = transpose_matrix(input_layer, INPUT_LAYER_SIZE, m);
-  Z = multiply_matrix_matrix(input_layer_weight, transposed, HIDDEN_LAYER1_SIZE,
-                             INPUT_LAYER_SIZE, m);
-  *input_layer_pre_activation =
-      sum_matrix_vector(Z, input_layer_bias, HIDDEN_LAYER1_SIZE, m);
-  *hidden_layer1 =
-      relu_matrix(*input_layer_pre_activation, HIDDEN_LAYER1_SIZE, m);
-  free(transposed);
-  free(Z);
-  // hidden layer 1
-  transposed = transpose_matrix(*hidden_layer1, HIDDEN_LAYER1_SIZE, m);
-  Z = multiply_matrix_matrix(hidden_layer1_weight, transposed,
-                             HIDDEN_LAYER2_SIZE, HIDDEN_LAYER1_SIZE, m);
-  *hidden_layer1_pre_activation =
-      sum_matrix_vector(Z, hidden_layer1_bias, HIDDEN_LAYER2_SIZE, m);
-  *hidden_layer2 =
-      relu_matrix(*hidden_layer1_pre_activation, HIDDEN_LAYER2_SIZE, m);
-  free(transposed);
-  free(Z);
-  // hidden layer 2
-  transposed = transpose_matrix(*hidden_layer2, HIDDEN_LAYER2_SIZE, m);
-  Z = multiply_matrix_matrix(hidden_layer2_weight, transposed,
-                             OUTPUT_LAYER_SIZE, HIDDEN_LAYER2_SIZE, m);
-  *hidden_layer2_pre_activation =
-      sum_matrix_vector(Z, hidden_layer2_bias, OUTPUT_LAYER_SIZE, m);
-  *output_layer =
-      minmax_matrix(*hidden_layer2_pre_activation, OUTPUT_LAYER_SIZE, m);
-  free(transposed);
-  free(Z);
+  M = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE * m);
+  // transpose_matrix(X, T, INPUT_LAYER_SIZE, m);
+  multiply_matrix_matrix(X, cnn->W1, M, m, INPUT_LAYER_SIZE, OUTPUT_LAYER_SIZE);
+  sum_matrix_vector(M, cnn->b1, layers->Z1, m, OUTPUT_LAYER_SIZE);
+  softmax_matrix(layers->Z1, layers->A1, m, OUTPUT_LAYER_SIZE);
+  free(M);
   return;
 }
 
-void backward_propagation(
-    float32_t* input_layer, float32_t* input_layer_weight,
-    float32_t** input_layer_weight_diff, float32_t** input_layer_bias_diff,
-    float32_t* input_layer_pre_activation, float32_t* hidden_layer1,
-    float32_t* hidden_layer1_weight, float32_t** hidden_layer1_weight_diff,
-    float32_t** hidden_layer1_bias_diff,
-    float32_t* hidden_layer1_pre_activation, float32_t* hidden_layer2,
-    float32_t* hidden_layer2_weight, float32_t** hidden_layer2_weight_diff,
-    float32_t** hidden_layer2_bias_diff, float32_t* output_layer,
-    float32_t* expected_layer, int m) {
-  float32_t *dZ1, *dZ2, *dZ3, *temp, *relu, *dWT, *dZT;
+void backward_propagation(const float32_t* X, const float32_t* Y,
+                           neural_network_t* cnn,
+                           neural_network_gradient_t* dcnn,
+                           neural_network_layers_t* layers, int m) {
+  float32_t *dZ, *dZT, *XT;
   // Calculo dos dZ's
-  dZ3 = diff_matrix(output_layer, expected_layer, OUTPUT_LAYER_SIZE, m);
-  dWT = transpose_matrix(hidden_layer2_weight, OUTPUT_LAYER_SIZE,
-                         HIDDEN_LAYER2_SIZE);
-  dZT = transpose_matrix(dZ3, OUTPUT_LAYER_SIZE, m);
-  temp = multiply_matrix_matrix(dWT, dZT, HIDDEN_LAYER2_SIZE, OUTPUT_LAYER_SIZE,
-                                m);
-  relu =
-      relu_derivate_matrix(hidden_layer1_pre_activation, HIDDEN_LAYER2_SIZE, m);
-  dZ2 = multiply_matrix_hadamard(temp, relu, HIDDEN_LAYER2_SIZE, m);
-  free(dWT);
+  dZ = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE * m);
+  diff_matrix(layers->A1, Y, dZ, m, OUTPUT_LAYER_SIZE);
+  //    Calculo das saidas
+  //    dW1
+  dZT = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE * m);
+  transpose_matrix(dZ, dZT, m, OUTPUT_LAYER_SIZE);
+  XT = malloc(sizeof(float32_t) * INPUT_LAYER_SIZE * m);
+  transpose_matrix(X, XT, m, INPUT_LAYER_SIZE);
+  multiply_matrix_matrix(dZT, XT, dcnn->dW1, OUTPUT_LAYER_SIZE, m,
+                         INPUT_LAYER_SIZE);
+  //  dB1
+  matrix_redux_float(dZT, dcnn->db1, OUTPUT_LAYER_SIZE, m);
   free(dZT);
-  free(temp);
-  free(relu);
-  dWT = transpose_matrix(hidden_layer1_weight, HIDDEN_LAYER2_SIZE,
-                         HIDDEN_LAYER1_SIZE);
-  dZT = transpose_matrix(dZ2, HIDDEN_LAYER2_SIZE, m);
-  temp = multiply_matrix_matrix(dWT, dZT, HIDDEN_LAYER1_SIZE,
-                                HIDDEN_LAYER2_SIZE, m);
-  relu =
-      relu_derivate_matrix(input_layer_pre_activation, HIDDEN_LAYER1_SIZE, m);
-  dZ1 = multiply_matrix_hadamard(temp, relu, HIDDEN_LAYER1_SIZE, m);
-  free(dWT);
-  free(dZT);
-  free(temp);
-  free(relu);
-  // Calculo das saidas
-  temp = multiply_matrix_matrix(dZ3, hidden_layer2, OUTPUT_LAYER_SIZE, m,
-                                HIDDEN_LAYER2_SIZE);
-  float32_t m_inv = ((float32_t)1) / ((float32_t)m);
-  *hidden_layer2_weight_diff = multiply_matrix_scalar(
-      temp, m_inv, OUTPUT_LAYER_SIZE, HIDDEN_LAYER2_SIZE);
-  free(temp);
-  temp = matrix_redux_float(dZ3, OUTPUT_LAYER_SIZE, m);
-  *hidden_layer2_bias_diff =
-      multiply_matrix_scalar(temp, m_inv, OUTPUT_LAYER_SIZE, 1);
-  free(temp);
-  temp = multiply_matrix_matrix(dZ2, hidden_layer1, HIDDEN_LAYER2_SIZE, m,
-                                HIDDEN_LAYER1_SIZE);
-  *hidden_layer1_weight_diff = multiply_matrix_scalar(
-      temp, m_inv, HIDDEN_LAYER2_SIZE, HIDDEN_LAYER1_SIZE);
-  free(temp);
-  temp = matrix_redux_float(dZ2, HIDDEN_LAYER2_SIZE, m);
-  *hidden_layer1_bias_diff =
-      multiply_matrix_scalar(temp, m_inv, HIDDEN_LAYER2_SIZE, 1);
-  free(temp);
-  temp = multiply_matrix_matrix(dZ1, input_layer, HIDDEN_LAYER1_SIZE, m,
-                                INPUT_LAYER_SIZE);
-  *input_layer_weight_diff =
-      multiply_matrix_scalar(temp, m_inv, HIDDEN_LAYER1_SIZE, INPUT_LAYER_SIZE);
-  free(temp);
-  temp = matrix_redux_float(dZ1, HIDDEN_LAYER1_SIZE, m);
-  *input_layer_bias_diff =
-      multiply_matrix_scalar(temp, m_inv, HIDDEN_LAYER1_SIZE, 1);
-  free(temp);
-  free(dZ3);
-  free(dZ2);
-  free(dZ1);
+  free(XT);
+  free(dZ);
   return;
 }
 
-void parameter_update(
-    float32_t* input_layer_weight, float32_t* input_layer_weight_diff,
-    float32_t* input_layer_bias, float32_t* input_layer_bias_diff,
-    float32_t* hidden_layer1_weight, float32_t* hidden_layer1_weight_diff,
-    float32_t* hidden_layer1_bias, float32_t* hidden_layer1_bias_diff,
-    float32_t* hidden_layer2_weight, float32_t* hidden_layer2_weight_diff,
-    float32_t* hidden_layer2_bias, float32_t* hidden_layer2_bias_diff) {
-  sum_multiply_matrix_scalar_fast(input_layer_weight, input_layer_weight_diff,
-                                  -LEARNING_RATE, HIDDEN_LAYER1_SIZE,
+void parameter_update(neural_network_t* cnn, neural_network_gradient_t* dcnn,
+                      int m) {
+  float32_t rate = ((float32_t)-LEARNING_RATE) / ((float32_t)m);
+  sum_multiply_matrix_scalar_fast(cnn->W1, dcnn->dW1, rate, OUTPUT_LAYER_SIZE,
                                   INPUT_LAYER_SIZE);
-  sum_multiply_matrix_scalar_fast(input_layer_bias, input_layer_bias_diff,
-                                  -LEARNING_RATE, HIDDEN_LAYER1_SIZE, 1);
-  sum_multiply_matrix_scalar_fast(hidden_layer1_weight,
-                                  hidden_layer1_weight_diff, -LEARNING_RATE,
-                                  HIDDEN_LAYER2_SIZE, HIDDEN_LAYER1_SIZE);
-  sum_multiply_matrix_scalar_fast(hidden_layer1_bias, hidden_layer1_bias_diff,
-                                  -LEARNING_RATE, HIDDEN_LAYER2_SIZE, 1);
-  sum_multiply_matrix_scalar_fast(hidden_layer2_weight,
-                                  hidden_layer2_weight_diff, -LEARNING_RATE,
-                                  OUTPUT_LAYER_SIZE, HIDDEN_LAYER2_SIZE);
-  sum_multiply_matrix_scalar_fast(hidden_layer2_bias, hidden_layer2_bias_diff,
-                                  -LEARNING_RATE, OUTPUT_LAYER_SIZE, 1);
+  sum_multiply_matrix_scalar_fast(cnn->b1, dcnn->db1, rate, 1,
+                                  OUTPUT_LAYER_SIZE);
   return;
 }
 
 void get_predictions(const float32_t* output_layer, int* predictions, int m) {
-  float32_t* output_layer_transposed =
-      transpose_matrix(output_layer, OUTPUT_LAYER_SIZE, m);
-  float32_t* vec = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE);
   for (int i = 0; i < m; i++) {
-    copy_vector(output_layer_transposed + OUTPUT_LAYER_SIZE * i, vec,
-                OUTPUT_LAYER_SIZE);
-    predictions[i] = (int)max_vector_fast(vec, OUTPUT_LAYER_SIZE);
+    float32_t max = -1.0 * FLOAT_MAX;
+    for (int j = 0; j < OUTPUT_LAYER_SIZE; j++) {
+      if (output_layer[OUTPUT_LAYER_SIZE * i + j] > max) {
+        predictions[i] = j;
+        max = output_layer[OUTPUT_LAYER_SIZE * i + j];
+      }
+    }
   }
-  free(vec);
-  free(output_layer_transposed);
   return;
 }
 
 int get_accuracy(const int* predictions, const int* expected, int m) {
-  int *accuracy_vec, accuracy;
-  int* compare = compare_vector(predictions, expected, m);
-  accuracy_vec = matrix_redux_int(compare, 1, m);
+  int *accuracy_vec, *compare, accuracy;
+  compare = malloc(sizeof(int) * m);
+  accuracy_vec = malloc(sizeof(int));
+  compare_vector(predictions, expected, compare, m);
+  matrix_redux_int(compare, accuracy_vec, 1, m);
   accuracy = *accuracy_vec;
   free(accuracy_vec);
+  free(compare);
   return accuracy;
 }
 
-int train(float32_t* train_set, int* expected_output,
-          float32_t** input_layer_weight, float32_t** input_layer_bias,
-          float32_t** hidden_layer1_weight, float32_t** hidden_layer1_bias,
-          float32_t** hidden_layer2_weight, float32_t** hidden_layer2_bias,
-          const int train_set_size, const int iterations) {
-  random_params(input_layer_weight, input_layer_bias, hidden_layer1_weight,
-                hidden_layer1_bias, hidden_layer2_weight, hidden_layer2_bias);
-  float32_t* expected_output_one_hot =
-      one_hot_matrix(expected_output, OUTPUT_LAYER_SIZE, train_set_size);
-  float32_t *hidden_layer1, *hidden_layer2, *output_layer;
-  float32_t *input_layer_pre_activation, *hidden_layer1_pre_activation,
-      *hidden_layer2_pre_activation;
-  float32_t *input_layer_weight_diff, *hidden_layer1_weight_diff,
-      *hidden_layer2_weight_diff;
-  float32_t *input_layer_bias_diff, *hidden_layer1_bias_diff,
-      *hidden_layer2_bias_diff;
-  int* predictions = malloc(sizeof(int) * train_set_size);
-  int accuracy = 0;
-  for (int i = 0; i < iterations; i++) {
-    forward_propagation(
-        train_set, *input_layer_weight, *input_layer_bias,
-        &input_layer_pre_activation, &hidden_layer1, *hidden_layer1_weight,
-        *hidden_layer1_bias, &hidden_layer1_pre_activation, &hidden_layer2,
-        *hidden_layer2_weight, *hidden_layer2_bias,
-        &hidden_layer2_pre_activation, &output_layer, train_set_size);
-    backward_propagation(train_set, *input_layer_weight,
-                         &input_layer_weight_diff, &input_layer_bias_diff,
-                         input_layer_pre_activation, hidden_layer1,
-                         *hidden_layer1_weight, &hidden_layer1_weight_diff,
-                         &hidden_layer1_bias_diff, hidden_layer1_pre_activation,
-                         hidden_layer2, *hidden_layer2_weight,
-                         &hidden_layer2_weight_diff, &hidden_layer2_bias_diff,
-                         output_layer, expected_output_one_hot, train_set_size);
-    parameter_update(*input_layer_weight, input_layer_weight_diff,
-                     *input_layer_bias, input_layer_bias_diff,
-                     *hidden_layer1_weight, hidden_layer1_weight_diff,
-                     *hidden_layer1_bias, hidden_layer1_bias_diff,
-                     *hidden_layer2_weight, hidden_layer2_weight_diff,
-                     *hidden_layer2_bias, hidden_layer2_bias_diff);
-    if (i % 10 == 0) {
-      printf("Iteration: %d\n", i);
-      get_predictions(output_layer, predictions, train_set_size);
-      accuracy = get_accuracy(predictions, expected_output, train_set_size);
-      printf("Accuracy: %f\n",
-             ((float32_t)accuracy) / ((float32_t)train_set_size));
-    }
-    free(hidden_layer1);
-    free(hidden_layer2);
-    free(output_layer);
-    free(input_layer_pre_activation);
-    free(hidden_layer1_pre_activation);
-    free(hidden_layer2_pre_activation);
-    free(input_layer_weight_diff);
-    free(hidden_layer1_weight_diff);
-    free(hidden_layer2_weight_diff);
-    free(input_layer_bias_diff);
-    free(hidden_layer1_bias_diff);
-    free(hidden_layer2_bias_diff);
+int init_batch(float32_t* X, int* Y, batch_t* batch, int index, int set_size) {
+  int offset = BATCH_SIZE * index;
+
+  batch->X = &X[offset * INPUT_LAYER_SIZE];
+  batch->Y = &Y[offset];
+
+  if (offset + BATCH_SIZE > set_size) {
+    return set_size - offset;
   }
-  free(expected_output_one_hot);
+
+  return BATCH_SIZE;
+}
+
+int train(float32_t* X, int* Y, neural_network_t* cnn, const int set_size,
+          const int iterations) {
+  float32_t* Y_one_hot;
+  int accuracy, m, number_of_batches, *predictions;
+  neural_network_gradient_t dcnn;
+  neural_network_layers_t layers;
+  batch_t batch;
+  predictions = malloc(sizeof(int) * BATCH_SIZE);
+  layers.Z1 = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE * BATCH_SIZE);
+  layers.A1 = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE * BATCH_SIZE);
+  Y_one_hot = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE * BATCH_SIZE);
+  number_of_batches = set_size / BATCH_SIZE;
+  random_params(cnn);
+  for (int i = 0; i < iterations; i++) {
+    m = init_batch(X, Y, &batch, i % number_of_batches, set_size);
+    printf("Iteration: %d\n", i);
+    printf("Tamanho do batch: %d\n", m);
+    one_hot_matrix(batch.Y, Y_one_hot, m, OUTPUT_LAYER_SIZE);
+    forward_propagation(batch.X, cnn, &layers, m);
+    backward_propagation(batch.X, Y_one_hot, cnn, &dcnn, &layers, m);
+    parameter_update(cnn, &dcnn, m);
+    get_predictions(layers.A1, predictions, m);
+    accuracy = get_accuracy(predictions, batch.Y, m);
+    printf("Accuracy: %f\n", ((float32_t)accuracy) / ((float32_t)m));
+  }
+  free(layers.Z1);
+  free(layers.A1);
+  free(Y_one_hot);
   free(predictions);
   return accuracy;
 }
 
-int* inference(float32_t* input_layer, float32_t* input_layer_weight,
-               float32_t* input_layer_bias, float32_t* hidden_layer1_weight,
-               float32_t* hidden_layer1_bias, float32_t* hidden_layer2_weight,
-               float32_t* hidden_layer2_bias, const int inference_set_size) {
-  float32_t *hidden_layer1, *hidden_layer2, *output_layer;
-  float32_t *input_layer_pre_activation, *hidden_layer1_pre_activation,
-      *hidden_layer2_pre_activation;
+int* inference(const float32_t* X, neural_network_t* cnn, const int set_size) {
+  neural_network_layers_t layers;
   int* predictions;
-  forward_propagation(
-      input_layer, input_layer_weight, input_layer_bias,
-      &input_layer_pre_activation, &hidden_layer1, hidden_layer1_weight,
-      hidden_layer1_bias, &hidden_layer1_pre_activation, &hidden_layer2,
-      hidden_layer2_weight, hidden_layer2_bias, &hidden_layer2_pre_activation,
-      &output_layer, inference_set_size);
-  predictions = malloc(sizeof(int) * inference_set_size);
-  get_predictions(output_layer, predictions, inference_set_size);
-  free(hidden_layer1);
-  free(hidden_layer2);
-  free(output_layer);
-  free(input_layer_pre_activation);
-  free(hidden_layer1_pre_activation);
-  free(hidden_layer2_pre_activation);
+  layers.Z1 = malloc(sizeof(float32_t) * HIDDEN_LAYER1_SIZE * set_size);
+  layers.A1 = malloc(sizeof(float32_t) * HIDDEN_LAYER1_SIZE * set_size);
+  forward_propagation(X, cnn, &layers, set_size);
+  predictions = malloc(sizeof(int) * set_size);
+  get_predictions(layers.A1, predictions, set_size);
+  free(layers.Z1);
+  free(layers.A1);
   return predictions;
 }

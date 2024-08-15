@@ -51,6 +51,8 @@ float32_t min_vector_fast(float32_t* A, const int n);
 // Tested
 void minmax_matrix(const float32_t* A, float32_t* B, const int m, const int n);
 
+void softmax_matrix(const float32_t* A, float32_t* B, const int m, const int n);
+
 // Tested
 void copy_vector(const float32_t* A, float32_t* B, const int n);
 

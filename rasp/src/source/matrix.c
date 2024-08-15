@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h> // Necessary for softmax
 
 #include "math_func.h"
 
@@ -52,24 +53,23 @@ void sum_matrix(const float32_t* A, const float32_t* B, float32_t* C, const int 
 }
 
 /***
-  * O vetor B deve ter dimensão M x 1
+  * O vetor B deve ter dimensão 1 x n
  ***/
 void sum_matrix_vector(const float32_t* A, const float32_t* B, float32_t* C,
                              const int m, const int n) {
   int i, j;
   int n_iter = n - (n % 4);
-  float32x4_t b;
 
   for (i = 0; i < m; i++) {
-    b = vmovq_n_f32(B[i]);
     for (j = 0; j < n_iter; j += 4) {
+      float32x4_t b = vld1q_f32(B + j);
       float32x4_t a = vld1q_f32(A + n * i + j);
       float32x4_t c = vaddq_f32(a, b);
       vst1q_f32(C + n * i + j, c);
     }
 
     while (j < n) {
-      C[n * i + j] = A[n + i + j] + B[i];
+      C[n * i + j] = A[n * i + j] + B[j];
       j++;
     }
   }
@@ -248,6 +248,26 @@ void minmax_matrix(const float32_t* A, float32_t* C, const int m, const int n) {
   return;
 }
 
+void softmax_matrix(const float32_t* A, float32_t* B, const int m, const int n) {
+  float32_t sum, max;
+  for (int i = 0; i < m; i++) {
+    sum = 0.0;
+    max = A[n * i];
+    for (int j = 1; j < n; j++) {
+      if (A[n * i + j] > max) max = A[n * i + j];
+    }
+
+    for (int j = 0; j < n; j++) {
+      sum += exp(A[n * i + j] - max);
+    }
+
+    for (int j = 0; j < n; j++) {
+      B[n * i + j] = exp(A[n * i + j] - max) / sum;
+    }
+  }
+  return;
+}
+
 void copy_vector(const float32_t* A, float32_t* B, const int n) {
   int i = 0;
   int n_iter = n - n % 4;
@@ -262,9 +282,9 @@ void copy_vector(const float32_t* A, float32_t* B, const int n) {
 }
 
 void one_hot_matrix(const int* A, float32_t* B, const int m, const int n) {
-  // Nada a ser paralelizado
-  for (int i = 0; i < n; i++) {
-    B[n * A[i] + i] = 1.0;
+  init_matrix(B, 0.0, m, n);
+  for (int i = 0; i < m; i++) {
+    B[n * i + A[i]] = 1.0;
   }
 }
 
@@ -294,30 +314,11 @@ void transpose_matrix(const float32_t* A, float32_t* B, const int m, const int n
       vst1q_f32(B + m * (j + 3) + i, b4);
     }
 
-    if (j < n) {
-      float32x4_t a1 = vld1q_f32(A + n * i + j);
-      float32x4_t a2 = vld1q_f32(A + n * (i + 1) + j);
-      float32x4_t a3 = vld1q_f32(A + n * (i + 2) + j);
-      float32x4_t a4 = vld1q_f32(A + n * (i + 3) + j);
-      float32x4x2_t zip1 = vzipq_f32(a1, a2);
-      float32x4x2_t zip2 = vzipq_f32(a3, a4);
-      float32x4_t b1 =
-          vcombine_f32(vget_low_f32(zip1.val[0]), vget_low_f32(zip2.val[0]));
-      float32x4_t b2 =
-          vcombine_f32(vget_high_f32(zip1.val[0]), vget_high_f32(zip2.val[0]));
-      float32x4_t b3 =
-          vcombine_f32(vget_low_f32(zip1.val[1]), vget_low_f32(zip2.val[1]));
-      float32x4_t b4 =
-          vcombine_f32(vget_high_f32(zip1.val[1]), vget_high_f32(zip2.val[1]));
-      j2 = j;
-      while (j2 < n) {
-        vst1q_f32(B + m * j2 + i, b1);
-        b1 = b2;
-        b2 = b3;
-        b3 = b4;
-        j2++;
-      }
+    while (j < n) {
+      B[j * m + i] = A[i * n + j];
+      j++;
     }
+
   }
 
   while (i < m) {

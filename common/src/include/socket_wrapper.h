@@ -12,9 +12,9 @@ int socket_server_init(int port, struct sockaddr_in* address);
 
 int socket_listen(int port, int handler, struct sockaddr_in* address);
 
-void socket_read(int sock, char* buf, ssize_t size);
+void socket_read(int sock, uint8_t* buf, ssize_t size);
 
-void socket_write(int sock, char* buf, ssize_t size);
+void socket_write(int sock, uint8_t* buf, ssize_t size);
 
 void socket_close(int sock);
 
