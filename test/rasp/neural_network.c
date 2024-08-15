@@ -6,10 +6,10 @@
 #include "matrix.h"
 
 void random_params(neural_network_t* cnn) {
-  init_matrix(cnn->W1, 0.5, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
-  init_matrix(cnn->b1, 0.5, OUTPUT_LAYER_SIZE, 1);
-  // init_matrix_random(cnn->W1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
-  // init_matrix_random(cnn->b1, OUTPUT_LAYER_SIZE, 1);
+  // init_matrix(cnn->W1, 0.5, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  // init_matrix(cnn->b1, 0.5, OUTPUT_LAYER_SIZE, 1);
+  init_matrix_random(cnn->W1, OUTPUT_LAYER_SIZE, INPUT_LAYER_SIZE);
+  init_matrix_random(cnn->b1, OUTPUT_LAYER_SIZE, 1);
   // init_matrix_random(cnn->W2, OUTPUT_LAYER_SIZE, HIDDEN_LAYER1_SIZE);
   // init_matrix_random(cnn->b2, OUTPUT_LAYER_SIZE, 1);
   return;
@@ -213,7 +213,7 @@ int* inference(const float* X, neural_network_t* cnn, const int set_size) {
   layers.A1 = malloc(sizeof(float) * HIDDEN_LAYER1_SIZE * set_size);
   // layers.Z2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * set_size);
   // layers.A2 = malloc(sizeof(float) * OUTPUT_LAYER_SIZE * set_size);
-  forward_propagation(X, cnn, &layers, set_size);
+  forward_propagation2(X, cnn, &layers, set_size);
   predictions = malloc(sizeof(int) * set_size);
   get_predictions(layers.A1, predictions, set_size);
   free(layers.Z1);

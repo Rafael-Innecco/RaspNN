@@ -53,7 +53,7 @@ int get_mnist_images(const char* image_path, uint8_t** images) {
   }
 
   int number_of_images = header.number_of_images;
-  // int number_of_images = 60;
+  // int number_of_images = 10000;
   printf("Numero de imagens: %d\n", number_of_images);
   *images = malloc(sizeof(uint8_t) * number_of_images * MNIST_IMAGE_WIDTH *
                    MNIST_IMAGE_HEIGHT);
@@ -97,7 +97,7 @@ int get_mnist_labels(const char* label_path, uint8_t** labels) {
   }
 
   int number_of_labels = to_little_endian(header.number_of_labels);
-  // int number_of_labels = 60;
+  // int number_of_labels = 10000;
   printf("Numero de labels: %d\n", number_of_labels);
   *labels = malloc(sizeof(uint8_t) * number_of_labels);
 

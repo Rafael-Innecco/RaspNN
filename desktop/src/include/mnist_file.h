@@ -21,7 +21,7 @@ typedef struct mnist_image_file_header_t_ {
   uint32_t number_of_columns;
 } __attribute__((packed)) mnist_image_file_header_t;
 
-int get_mnist_images(const char* image_path, char** images);
-int get_mnist_labels(const char* label_path, char** labels);
+int get_mnist_images(const char* image_path, uint8_t** images);
+int get_mnist_labels(const char* label_path, uint8_t** labels);
 
 #endif  // MNISTFILE_H

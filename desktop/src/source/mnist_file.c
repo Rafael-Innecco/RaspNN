@@ -13,7 +13,7 @@ uint32_t to_little_endian(uint32_t in) {
 #endif
 }
 
-int get_mnist_images(const char* image_path, char** images) {
+int get_mnist_images(const char* image_path, uint8_t** images) {
   FILE* file;
   file = fopen(image_path, "rb");
   mnist_image_file_header_t header;
@@ -53,11 +53,12 @@ int get_mnist_images(const char* image_path, char** images) {
   }
 
   int number_of_images = header.number_of_images;
+  // int number_of_images = 10000;
   printf("Numero de imagens: %d\n", number_of_images);
-  *images = malloc(sizeof(char) * number_of_images * MNIST_IMAGE_WIDTH *
+  *images = malloc(sizeof(uint8_t) * number_of_images * MNIST_IMAGE_WIDTH *
                    MNIST_IMAGE_HEIGHT);
 
-  if (fread(*images, sizeof(char),
+  if (fread(*images, sizeof(uint8_t),
             number_of_images * MNIST_IMAGE_WIDTH * MNIST_IMAGE_HEIGHT, file) !=
       number_of_images * MNIST_IMAGE_WIDTH * MNIST_IMAGE_HEIGHT) {
     printf("Error while reading images from file!\n");
@@ -71,7 +72,7 @@ int get_mnist_images(const char* image_path, char** images) {
   return number_of_images;
 }
 
-int get_mnist_labels(const char* label_path, char** labels) {
+int get_mnist_labels(const char* label_path, uint8_t** labels) {
   FILE* file;
   file = fopen(label_path, "rb");
   mnist_label_file_header_t header;
@@ -96,10 +97,11 @@ int get_mnist_labels(const char* label_path, char** labels) {
   }
 
   int number_of_labels = to_little_endian(header.number_of_labels);
+  // int number_of_labels = 10000;
   printf("Numero de labels: %d\n", number_of_labels);
-  *labels = malloc(sizeof(char) * number_of_labels);
+  *labels = malloc(sizeof(uint8_t) * number_of_labels);
 
-  if (fread(*labels, sizeof(char), number_of_labels, file) !=
+  if (fread(*labels, sizeof(uint8_t), number_of_labels, file) !=
       number_of_labels) {
     printf("Error while reading labels from file!\n");
     free(*labels);
