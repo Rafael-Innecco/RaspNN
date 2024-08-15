@@ -12,7 +12,7 @@ int socket_connect(char* ip, int port) {
   struct sockaddr_in serv_addr;
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    printf("\n Socket creation error \n");
+    printf("\n\033[31m Socket creation error \033[0m\n");
     return -1;
   }
 
@@ -20,13 +20,13 @@ int socket_connect(char* ip, int port) {
   serv_addr.sin_port = htons(port);
 
   if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0) {
-    printf("\nInvalid address/ Address not supported \n");
+    printf("\n\033[31mInvalid address/ Address not supported \033[0m\n");
     return -1;
   }
 
   if ((status = connect(sock, (struct sockaddr*)&serv_addr,
                         sizeof(serv_addr))) < 0) {
-    printf("\nConnection Failed \n");
+    printf("\n\033[31mConnection Failed \033[0m\n");
     return -1;
   }
 
@@ -39,12 +39,12 @@ int socket_server_init(int port, struct sockaddr_in* address) {
   socklen_t addrlen = sizeof((*address));
 
   if ((handler = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("Socket creation failed");
+    perror("\033[31mSocket creation failed\033[0m");
     return -1;
   }
 
   if (setsockopt(handler, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-    perror("setsockopt");
+    perror("\033[31msetsockopt\033[0m");
     return -1;
   }
 
@@ -53,12 +53,12 @@ int socket_server_init(int port, struct sockaddr_in* address) {
   (*address).sin_port = htons(port);
 
   if (bind(handler, (struct sockaddr*)address, sizeof((*address))) < 0) {
-    perror("Bind failed");
+    perror("\033[31mBind failed\033[0m");
     return -1;
   }
 
   if (listen(handler, 1) < 0) {
-    perror("Listen failed");
+    perror("\033[31mListen failed\033[0m");
     return -1;
   }
 
@@ -69,7 +69,7 @@ int socket_listen(int port, int handler, struct sockaddr_in* address) {
   int new_socket = -1;
   socklen_t addrlen = sizeof((*address));
   if ((new_socket = accept(handler, (struct sockaddr*)address, &addrlen)) < 0) {
-    perror("Accept failed");
+    perror("\033[31mAccept failed\033[0m");
     return -1;
   }
   return new_socket;
@@ -77,25 +77,21 @@ int socket_listen(int port, int handler, struct sockaddr_in* address) {
 
 void socket_read(int sock, uint8_t* buf, ssize_t size) {
   ssize_t i = 0, num_bytes = (size > MTU) ? MTU : size;
-  printf("Lendo %ld bytes\n", size);
   while (i < size) {
     num_bytes = read(sock, &buf[i], num_bytes);
     if (num_bytes > 0) i += num_bytes;
     num_bytes = ((size - i) > MTU) ? MTU : (size - i);
   }
-  printf("Terminei de ler\n");
   return;
 }
 
 void socket_write(int sock, uint8_t* buf, ssize_t size) {
   ssize_t i = 0, num_bytes = (size > MTU) ? MTU : size;
-  printf("Escrevendo %ld bytes\n", size);
   while (i < size) {
     num_bytes = send(sock, &buf[i], num_bytes, 0);
     if (num_bytes >= 0) i += num_bytes;
     num_bytes = ((size - i) > MTU) ? MTU : (size - i);
   }
-  printf("Terminei de escrever\n");
 }
 
 void socket_close(int sock) {

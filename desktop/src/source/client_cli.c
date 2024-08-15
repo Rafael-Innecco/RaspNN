@@ -20,11 +20,15 @@ int train(int sock, const char *images_path, const char *labels_path) {
     return -1;
   }
 
+  printf("\033[36m");
   // Set Train Mode
+  printf("---------------- INICIAR TREINO -----------------\n");
   mode = TRAIN;
   socket_write(sock, &mode, sizeof(uint8_t));
 
+  printf("\033[33m");
   // Send Train Data Set Size
+  printf("----------- ENVIANDO DADOS DE TREINO ------------\n");
   socket_write(sock, (uint8_t *)&data_set_size, sizeof(int) / sizeof(uint8_t));
 
   // Send Train Data Set
@@ -34,15 +38,16 @@ int train(int sock, const char *images_path, const char *labels_path) {
   // Send Label Data Set
   socket_write(sock, labels, data_set_size);
   free(labels);
-
+  
+  printf("--------- ENVIANDO NÚMERO DE ITERAÇÕES ----------\n");
   // Send Number of Iterations
   int iterations = ITERATIONS;
   socket_write(sock, (uint8_t *)&iterations, sizeof(int) / sizeof(uint8_t));
 
   // Wait for Training Accuracy
-  int accuracy;
+  float accuracy;
   socket_read(sock, (uint8_t *)&accuracy, sizeof(int) / sizeof(uint8_t));
-  printf("Acurácia: %d\n", accuracy);
+  printf("\033[32mAcurácia: %f\033[0m\n", accuracy);
   return 0;
 }
 
@@ -58,13 +63,17 @@ int inference(int sock, const char *images_path, const char *labels_path,
     return -1;
   }
 
+  printf("\033[36m");
+  printf("-------------- INICIAR INFERÊNCIA ---------------\n");
   mode = INFER;
   socket_write(sock, &mode, sizeof(uint8_t));
 
   // Send Inference Data Set Size
   socket_write(sock, (uint8_t *)&data_set_size, sizeof(int) / sizeof(uint8_t));
 
+  printf("\033[33m");
   // Send Inference Data Set
+  printf("-------- ENVIANDO DADOS PARA INFERENCIA ---------\n");
   socket_write(sock, images, data_set_size * IMAGE_SIZE);
   free(images);
 
@@ -72,6 +81,7 @@ int inference(int sock, const char *images_path, const char *labels_path,
   uint8_t *inference_result = malloc(sizeof(uint8_t) * data_set_size);
   socket_read(sock, inference_result, sizeof(uint8_t) * data_set_size);
   // Compare Inference Result With Expected Result
+  printf("\033[32m");
   if (check_predictions == 1) {
     int accuracy_ = 0;
     for (int i = 0; i < sizeof(uint8_t) * data_set_size; i++) {
@@ -85,6 +95,7 @@ int inference(int sock, const char *images_path, const char *labels_path,
     }
     printf("\n");
   }
+  printf("\033[0m");
 
   free(labels);
   free(inference_result);
@@ -92,6 +103,9 @@ int inference(int sock, const char *images_path, const char *labels_path,
 }
 
 int close_connection(int sock) {
+  printf("\033[33m");
+  printf("------------- FECHANDO COMUNICAÇÃO --------------\n");
+  printf("\033[0m");
   uint8_t mode = CLOSE;
   socket_write(sock, &mode, sizeof(uint8_t));
   return 1;
