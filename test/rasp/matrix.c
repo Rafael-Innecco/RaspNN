@@ -123,16 +123,20 @@ void minmax_matrix(const float* A, float* B, const int m, const int n) {
 }
 
 void softmax_matrix(const float* A, float* B, const int m, const int n) {
-  float sum;
+  float sum, max;
   for (int i = 0; i < m; i++) {
     sum = 0.0;
-
-    for (int j = 0; j < n; j++) {
-      sum += exp(A[n * i + j]);
+    max = A[n * i];
+    for (int j = 1; j < n; j++) {
+      if (A[n * i + j] > max) max = A[n * i + j];
     }
 
     for (int j = 0; j < n; j++) {
-      B[n * i + j] = exp(A[n * i + j]) / sum;
+      sum += exp(A[n * i + j] - max);
+    }
+
+    for (int j = 0; j < n; j++) {
+      B[n * i + j] = exp(A[n * i + j] - max) / sum;
     }
   }
   return;
@@ -146,7 +150,7 @@ void copy_vector(const float* A, float* B, const int n) {
 
 void one_hot_matrix(const int* A, float* B, const int m, const int n) {
   init_matrix(B, 0.0, m, n);
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < m; i++) {
     B[n * i + A[i]] = 1.0;
   }
   return;
@@ -228,7 +232,7 @@ void print_matrix_parcial(const float* A, int m, int n, int k) {
   printf("\n");
   for (i = 0; i < m; i++) {
     for (j = 0; j < k; j++) {
-      printf("\t%.4f ", A[n * i + j]);
+      printf("\t%1.3f ", A[n * i + j]);
     }
     printf("\n");
   }

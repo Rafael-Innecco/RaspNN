@@ -52,16 +52,6 @@ int main_server() {  // CNN Variables
         break;
       case WAIT_TRAIN_ITERATIONS:
         iterations = action_result;
-        // printf("\n");
-        // for (int i = 0; i < 10; i++) {
-        //   for (int j = 130; j < 170; j++) {
-        //     printf("\t%d ", (int)data_set[i * IMAGE_SIZE + j]);
-        //   }
-        //   printf("\n");
-        // }
-        // printf("\n");
-        // X = malloc(sizeof(float) * IMAGE_SIZE * data_set_size);
-        // transpose_matrix(data_set, X, data_set_size, IMAGE_SIZE);
         accuracy =
             train(data_set, expected_output, &cnn, data_set_size, iterations);
         result = &accuracy;
