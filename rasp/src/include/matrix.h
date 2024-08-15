@@ -15,7 +15,7 @@ void print_matrix(float32_t*, int, int);
 
 void print_int_matrix(int*, int, int);
 
-void print_matrix_parcial(const float32_t* A, int m, int n, int k);
+void print_matrix_partial(const float32_t* A, int m, int n, int k);
 
 // Matrix operations
 

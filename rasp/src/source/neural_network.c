@@ -60,8 +60,13 @@ void parameter_update(neural_network_t* cnn, neural_network_gradient_t* dcnn,
 void get_predictions(const float32_t* output_layer, int* predictions, int m) {
   float32_t* vec = malloc(sizeof(float32_t) * OUTPUT_LAYER_SIZE);
   for (int i = 0; i < m; i++) {
-    copy_vector(output_layer + OUTPUT_LAYER_SIZE * i, vec, OUTPUT_LAYER_SIZE);
-    predictions[i] = max_vector_fast(vec, OUTPUT_LAYER_SIZE);
+    float32_t max = -1.0 * FLOAT_MAX;
+    for (int j = 0; j < OUTPUT_LAYER_SIZE; j++) {
+      if (output_layer[OUTPUT_LAYER_SIZE * i + j] > max) {
+        predictions[i] = j;
+        max = output_layer[OUTPUT_LAYER_SIZE * i + j];
+      }
+    }
   }
   return;
 }

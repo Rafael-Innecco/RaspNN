@@ -216,36 +216,30 @@ float32_t min_vector_fast(float32_t* A, const int n) {
   return min_vector_fast(A, m);
 }
 
-void minmax_matrix(const float32_t* A, float32_t* C, const int m, const int n) {
-  float32_t* B = malloc(sizeof(float32_t) * n * m);
-  float32_t* A_T = malloc(sizeof(float32_t) * n * m);
-  transpose_matrix(A, A_T, m, n);
+void minmax_matrix(const float32_t* A, float32_t* B, const int m, const int n) {
   float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
   int i, j;
   int m_iter = m - m % 4;
   for (i = 0; i < n; i++) {
-    copy_vector(A_T + m * i, vec, m);
+    copy_vector(A + m * i, vec, m);
     min = min_vector_fast(vec, m);
-    copy_vector(A_T + m * i, vec, m);
+    copy_vector(A + m * i, vec, m);
     max = max_vector_fast(vec, m);
     float32_t inverse_interval = 1 / (max - min);
     float32_t min_normalized = -min / (max - min);
     float32x4_t min_normalized_vec = vmovq_n_f32(min_normalized);
     for (j = 0; j < m_iter; j += 4) {
-      float32x4_t a = vld1q_f32(A_T + m * i + j);
+      float32x4_t a = vld1q_f32(A + m * i + j);
       float32x4_t result = vmlaq_n_f32(min_normalized_vec, a, inverse_interval);
       vst1q_f32(B + m * i + j, result);
     }
     while (j < m) {
-      B[m * i + j] = A_T[m * i + j] * inverse_interval + min_normalized;
+      B[m * i + j] = A[m * i + j] * inverse_interval + min_normalized;
       j++;
     }
   }
-  transpose_matrix(B, C, n, m);
-  free(B);
   free(vec);
-  free(A_T);
   return;
 }
 
@@ -294,7 +288,7 @@ void transpose_matrix(const float32_t* A, float32_t* B, const int m,
                       const int n) {
   int m_iter = m - m % 4;
   int n_iter = n - n % 4;
-  int i, j, j2;
+  int i, j;
   for (i = 0; i < m_iter; i += 4) {
     for (j = 0; j < n_iter; j += 4) {
       float32x4_t a1 = vld1q_f32(A + n * i + j);
@@ -480,7 +474,7 @@ void print_int_matrix(int* A, int m, int n) {
   printf("\n");
 }
 
-void print_matrix_parcial(const float32_t* A, int m, int n, int k) {
+void print_matrix_partial(const float32_t* A, int m, int n, int k) {
   int i, j;
   printf("\n");
   for (i = 0; i < m; i++) {

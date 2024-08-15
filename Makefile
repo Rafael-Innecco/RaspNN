@@ -7,6 +7,9 @@ CFONTES = $(wildcard ${CFONTE}*.c)
 BUILDDIR = build/
 PROJECT = ${BUILDDIR}teste
 
+TESTSOURCE = examples/main_test.c
+TESTTARGET = examples/build/
+
 #
 # Arquivos de saída
 #
@@ -19,8 +22,8 @@ GCC = gcc
 OBJCPY = objcopy
 OBJDMP = objdump
 
-RASP_C_OPTIONS = -Irasp/src/include -Icommon/src/include -O2 -g
-DESKTOP_C_OPTIONS = -Idesktop/src/include -Icommon/src/include -O2 -g
+RASP_C_OPTIONS = -Irasp/src/include -Icommon/src/include -O2
+DESKTOP_C_OPTIONS = -Idesktop/src/include -Icommon/src/include -O2
 VALGRIND_OPTIONS = -s --leak-check=full --track-origins=yes --show-leak-kinds=all 
 
 all: compile run 
@@ -29,7 +32,11 @@ compile:
 	gcc ${RASP_C_OPTIONS} ${CFONTES} ${FONTES} -o ${RTARGET} -lm
 
 tests:
-	gcc ${RASP_C_OPTIONS} ${FONTE}math_func.c ${FONTE}matrix.c ${FONTE}main.c -o ${RTARGET}
+	gcc -g -Irasp/src/include -c -o ${TESTTARGET}math_func.o ${FONTE}math_func.c
+	gcc -g -Irasp/src/include -c -o ${TESTTARGET}matrix.o ${FONTE}matrix.c
+	gcc -g -Irasp/src/include -c -o ${TESTTARGET}main.o ${TESTSOURCE} 
+	gcc ${TESTTARGET}math_func.o ${TESTTARGET}matrix.o ${TESTTARGET}main.o -o ${TESTTARGET}test -lm 
+	${TESTTARGET}test
 
 run: ${RTARGET}
 	${RTARGET}

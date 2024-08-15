@@ -1,4 +1,12 @@
 #include <arm_neon.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "matrix.h"
+
+#define MATRIX_M 5
+#define MATRIX_N 7
+#define MATRIX_O 9
 
 int main() {
   float32_t *A = malloc(sizeof(float32_t) * MATRIX_M * MATRIX_N);
@@ -44,7 +52,7 @@ int main() {
   printf("\033[36mMatrizes operando:\n");
   print_matrix(A, MATRIX_M, MATRIX_N);
   // print_matrix(B, MATRIX_M, MATRIX_N);
-  print_matrix(fvec, 1, MATRIX_N);
+  // print_matrix(fvec, 1, MATRIX_N);
   // print_matrix(D, MATRIX_O, MATRIX_N);
   // print_int_matrix(intA, 1, MATRIX_M);
   // print_int_matrix(intB, 1, MATRIX_M);
@@ -85,9 +93,9 @@ int main() {
   // printf("\033[31mTraspose B\n");
   // print_matrix(result, MATRIX_N, MATRIX_M);
 
-  // minmax_matrix(A, result, MATRIX_M, MATRIX_N);
-  // printf("\033[33mMinMax A\n");
-  // print_matrix(result, MATRIX_M, MATRIX_N);
+  minmax_matrix(A, result, MATRIX_M, MATRIX_N);
+  printf("\033[33mMinMax A\n");
+  print_matrix(result, MATRIX_M, MATRIX_N);
 
   // multiply_matrix_matrix(A, D, resultMult, MATRIX_M, MATRIX_N, MATRIX_O);
   // printf("\033[34mA x D\n");
@@ -113,9 +121,9 @@ int main() {
   // printf("\033[33mredux intMA\n");
   // print_int_matrix(resultIntVec, MATRIX_M, 1);
 
-  sum_matrix_vector(A, fvec, result, MATRIX_M, MATRIX_N);
-  printf("\033[34mSum A fvec\n");
-  print_matrix(result, MATRIX_M, MATRIX_N);
+  // sum_matrix_vector(A, fvec, result, MATRIX_M, MATRIX_N);
+  // printf("\033[34mSum A fvec\n");
+  // print_matrix(result, MATRIX_M, MATRIX_N);
 
   printf("\033[0m");
 

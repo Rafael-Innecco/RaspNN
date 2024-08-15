@@ -6,12 +6,8 @@
 #include "server_fsm.h"
 #include "socket_wrapper.h"
 
-#define MATRIX_M 13
-#define MATRIX_N 11
-#define MATRIX_O 9
-
 int main() {
-  float *data;
+  float32_t *data;
   neural_network_t cnn;
   int *expected_output, *result;
   int data_set_size, iterations;
