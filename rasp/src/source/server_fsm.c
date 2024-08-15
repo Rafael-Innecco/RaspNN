@@ -66,7 +66,7 @@ int action(int state, int sock, int* result, int size, float32_t** data) {
       socket_read(sock, message, data_size * IMAGE_SIZE);
       *data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
       for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
-        (*data)[i] = (float32_t)message[i];
+        (*data)[i] = (float32_t)message[i] / ((float32_t)255.0);
       }
       free(message);
       return data_size;
@@ -83,7 +83,7 @@ int action(int state, int sock, int* result, int size, float32_t** data) {
       socket_read(sock, (char*)&iterations, sizeof(int) / sizeof(char));
       return iterations;
     case SEND_TRAINING_RESULT:
-      socket_write(sock, (char*)result, sizeof(int) / sizeof(char));
+      socket_write(sock, (char*)(*data), sizeof(int) / sizeof(char));
       return 0;
     case WAIT_INFERENCE_DATA:
       // Obter o tamanho do data set
@@ -93,7 +93,8 @@ int action(int state, int sock, int* result, int size, float32_t** data) {
       socket_read(sock, message, data_size * IMAGE_SIZE);
       *data = malloc((sizeof(float32_t) * data_size * IMAGE_SIZE));
       for (int i = 0; i < data_size * IMAGE_SIZE; i++) {
-        (*data)[i] = (float32_t)message[i];
+        (*data)[i] =
+            (float32_t)message[i](float32_t) message[i] / ((float32_t)255.0);
       }
       free(message);
       return data_size;

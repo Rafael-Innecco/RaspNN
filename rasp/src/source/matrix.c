@@ -1,10 +1,10 @@
 
 #include "matrix.h"
 
+#include <math.h>  // Necessary for softmax
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h> // Necessary for softmax
 
 #include "math_func.h"
 
@@ -33,8 +33,8 @@ void init_matrix_random(float32_t* A, const int m, const int n) {
   return;
 }
 
-void sum_matrix(const float32_t* A, const float32_t* B, float32_t* C, const int m,
-                      const int n) {
+void sum_matrix(const float32_t* A, const float32_t* B, float32_t* C,
+                const int m, const int n) {
   int i;
   int iter = (n * m) - ((n * m) % 4);
   for (i = 0; i < iter; i += 4) {
@@ -53,10 +53,10 @@ void sum_matrix(const float32_t* A, const float32_t* B, float32_t* C, const int 
 }
 
 /***
-  * O vetor B deve ter dimensão 1 x n
+ * O vetor B deve ter dimensão 1 x n
  ***/
 void sum_matrix_vector(const float32_t* A, const float32_t* B, float32_t* C,
-                             const int m, const int n) {
+                       const int m, const int n) {
   int i, j;
   int n_iter = n - (n % 4);
 
@@ -77,8 +77,8 @@ void sum_matrix_vector(const float32_t* A, const float32_t* B, float32_t* C,
   return;
 }
 
-void diff_matrix(const float32_t* A, const float32_t* B, float32_t* C, const int m,
-                       const int n) {
+void diff_matrix(const float32_t* A, const float32_t* B, float32_t* C,
+                 const int m, const int n) {
   int i;
   int iter = (n * m) - ((n * m) % 4);
   for (i = 0; i < iter; i += 4) {
@@ -115,7 +115,8 @@ void relu_matrix(const float32_t* A, float32_t* B, const int m, const int n) {
   return;
 }
 
-void relu_derivate_matrix(const float32_t* A, float32_t* B, const int m, const int n) {
+void relu_derivate_matrix(const float32_t* A, float32_t* B, const int m,
+                          const int n) {
   int i;
   int iter = (n * m) - ((n * m) % 4);
   for (i = 0; i < iter; i += 4) {
@@ -136,7 +137,7 @@ void relu_derivate_matrix(const float32_t* A, float32_t* B, const int m, const i
 }
 
 void multiply_matrix_scalar(const float32_t* A, float32_t* B, const float32_t x,
-                                  const int m, const int n) {
+                            const int m, const int n) {
   int iter = (n * m) - ((n * m) % 4);
   int i;
   for (i = 0; i < iter; i += 4) {
@@ -173,7 +174,7 @@ void sum_multiply_matrix_scalar_fast(float32_t* A, const float32_t* B,
 
 float32_t max_vector_fast(float32_t* A, const int n) {
   float32_t max = -1.0 * FLOAT_MAX;
-  int m = (n % 8) ? ((n >> 1) + 1) : (n >> 1);  // m = ceil(n/8)
+  int m = (n % 8) ? ((n >> 1) + 1) : (n >> 1);
   int n_iter = n - n % 8;
   int i;
   for (i = 0; i < n_iter; i += 8) {
@@ -195,7 +196,7 @@ float32_t max_vector_fast(float32_t* A, const int n) {
 
 float32_t min_vector_fast(float32_t* A, const int n) {
   float32_t min = FLOAT_MAX;
-  int m = (n % 8) ? ((n >> 1) + 1) : (n >> 1);  // m = ceil(n/8)
+  int m = (n % 8) ? ((n >> 1) + 1) : (n >> 1);
   int n_iter = n - n % 8;
   int i;
   for (i = 0; i < n_iter; i += 8) {
@@ -217,7 +218,7 @@ float32_t min_vector_fast(float32_t* A, const int n) {
 
 void minmax_matrix(const float32_t* A, float32_t* C, const int m, const int n) {
   float32_t* B = malloc(sizeof(float32_t) * n * m);
-  float32_t* A_T = malloc(sizeof(float32_t) * n * m); 
+  float32_t* A_T = malloc(sizeof(float32_t) * n * m);
   transpose_matrix(A, A_T, m, n);
   float32_t* vec = malloc(sizeof(float32_t) * m);
   float32_t min, max;
@@ -248,7 +249,8 @@ void minmax_matrix(const float32_t* A, float32_t* C, const int m, const int n) {
   return;
 }
 
-void softmax_matrix(const float32_t* A, float32_t* B, const int m, const int n) {
+void softmax_matrix(const float32_t* A, float32_t* B, const int m,
+                    const int n) {
   float32_t sum, max;
   for (int i = 0; i < m; i++) {
     sum = 0.0;
@@ -288,7 +290,8 @@ void one_hot_matrix(const int* A, float32_t* B, const int m, const int n) {
   }
 }
 
-void transpose_matrix(const float32_t* A, float32_t* B, const int m, const int n) {
+void transpose_matrix(const float32_t* A, float32_t* B, const int m,
+                      const int n) {
   int m_iter = m - m % 4;
   int n_iter = n - n % 4;
   int i, j, j2;
@@ -318,7 +321,6 @@ void transpose_matrix(const float32_t* A, float32_t* B, const int m, const int n
       B[j * m + i] = A[i * n + j];
       j++;
     }
-
   }
 
   while (i < m) {
@@ -331,8 +333,9 @@ void transpose_matrix(const float32_t* A, float32_t* B, const int m, const int n
 
 // Não multiplica linha X coluna, e sim linha X linha (transposta)
 // As dimensões devem ser mxl e nxl!!!!
-void multiply_matrix_matrix(const float32_t* A, const float32_t* B, float32_t* C,
-                                  const int m, const int l, const int n) {
+void multiply_matrix_matrix(const float32_t* A, const float32_t* B,
+                            float32_t* C, const int m, const int l,
+                            const int n) {
   int l_iter = l - l % 4;
   int i, j, k;
   float32x4_t sum;
@@ -362,8 +365,8 @@ void multiply_matrix_matrix(const float32_t* A, const float32_t* B, float32_t* C
   }
 }
 
-void multiply_matrix_hadamard(const float32_t* A, const float32_t* B, float32_t* C,
-                                    const int m, const int n) {
+void multiply_matrix_hadamard(const float32_t* A, const float32_t* B,
+                              float32_t* C, const int m, const int n) {
   int i;
   int iter = (n * m) - ((n * m) % 4);
   for (i = 0; i < iter; i += 4) {
@@ -398,7 +401,8 @@ void compare_vector(const int* A, const int* B, int* compare, const int n) {
   }
 }
 
-void matrix_redux_float(const float32_t* A, float32_t* B, const int m, const int n) {
+void matrix_redux_float(const float32_t* A, float32_t* B, const int m,
+                        const int n) {
   int i, j;
   float32x4_t sum;
   float32_t result;
@@ -457,33 +461,31 @@ void print_matrix(float32_t* A, int m, int n) {
   printf("\n");
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      printf("\t%f ", A[n*i + j]);
+      printf("\t%f ", A[n * i + j]);
     }
     printf("\n");
   }
   printf("\n");
 }
-
 
 void print_int_matrix(int* A, int m, int n) {
   int i, j;
   printf("\n");
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      printf("\t%d ", A[n*i + j]);
+      printf("\t%d ", A[n * i + j]);
     }
     printf("\n");
   }
   printf("\n");
 }
 
-
 void print_matrix_parcial(const float32_t* A, int m, int n, int k) {
   int i, j;
   printf("\n");
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      printf("\t%f ", A[n*i + j]);
+      printf("\t%f ", A[n * i + j]);
     }
     printf("\n");
   }
