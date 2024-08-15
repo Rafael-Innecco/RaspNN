@@ -14,7 +14,7 @@ void init_matrix(float* A, const float x, const int m, const int n) {
 }
 
 void init_matrix_random(float* A, const int m, const int n) {
-  // srand(time(NULL));  // Semente aleatoria
+  srand(time(NULL));  // Semente aleatoria
 
   for (int i = 0; i < n * m; i++) {
     A[i] = (float)rand() / (float)RAND_MAX - 0.5;
