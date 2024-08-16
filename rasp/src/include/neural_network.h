@@ -7,7 +7,7 @@
 #define OUTPUT_LAYER_SIZE 10
 
 #define BATCH_SIZE 100
-#define LEARNING_RATE 0.1
+#define LEARNING_RATE 0.5
 
 typedef struct neural_network_t_ {
   float32_t b1[OUTPUT_LAYER_SIZE];
