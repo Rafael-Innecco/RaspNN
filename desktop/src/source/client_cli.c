@@ -60,7 +60,7 @@ int inference(int sock, const char *images_path, const char *labels_path,
   uint8_t *images, *labels;
 
   int data_set_size = get_mnist_images(images_path, &images);
-  if ((data_set_size != get_mnist_labels(labels_path, &labels)) ||
+  if (check_predictions == 1 && (data_set_size != get_mnist_labels(labels_path, &labels)) ||
       (data_set_size == 0)) {
     printf("Erro ao ler arquivos de inferencia!\n");
     return -1;
@@ -93,6 +93,7 @@ int inference(int sock, const char *images_path, const char *labels_path,
       if (labels[i] == inference_result[i]) accuracy_++;
     }
     printf("Acurácia: %1.3f\n", (float)accuracy_ / (float)data_set_size);
+  free(labels);
   } else {  // Print Predictions
     printf("Predições:\n");
     for (int i = 0; i < sizeof(uint8_t) * data_set_size; i++) {
@@ -102,7 +103,6 @@ int inference(int sock, const char *images_path, const char *labels_path,
   }
   printf("\033[0m");
 
-  free(labels);
   free(inference_result);
   return 0;
 }
