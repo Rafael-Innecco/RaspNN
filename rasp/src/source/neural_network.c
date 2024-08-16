@@ -111,14 +111,16 @@ float32_t train(float32_t* X, int* Y, neural_network_t* cnn, const int set_size,
   random_params(cnn);
   for (int i = 0; i < iterations; i++) {
     m = init_batch(X, Y, &batch, i % number_of_batches, set_size);
-    printf("Iteration: %d\n", i);
     one_hot_matrix(batch.Y, Y_one_hot, m, OUTPUT_LAYER_SIZE);
     forward_propagation(batch.X, cnn, &layers, m);
     backward_propagation(batch.X, Y_one_hot, cnn, &dcnn, &layers, m);
     parameter_update(cnn, &dcnn, m);
     get_predictions(layers.A1, predictions, m);
     accuracy = get_accuracy(predictions, batch.Y, m);
-    printf("Accuracy: %f\n", ((float32_t)accuracy) / ((float32_t)m));
+    if (i % 20 == 0) {
+      printf("Iteration: %d\n", i);
+      printf("Accuracy: %f\n", ((float32_t)accuracy) / ((float32_t)m));
+    }
   }
   free(layers.Z1);
   free(layers.A1);

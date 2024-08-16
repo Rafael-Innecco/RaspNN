@@ -5,6 +5,7 @@
 #include "neural_network.h"
 #include "server_fsm.h"
 #include "socket_wrapper.h"
+#include "time.h"
 
 int main() {
   float32_t *data;
@@ -39,9 +40,19 @@ int main() {
         expected_output = result;
         break;
       case WAIT_TRAIN_ITERATIONS:
+        struct timespec inicio, fim;
+        long segundos, nanosegundos;
+        double tempo_gasto;
         iterations = action_result;
+        clock_gettime(CLOCK_MONOTONIC, &inicio);
         accuracy =
             train(data, expected_output, &cnn, data_set_size, iterations);
+        clock_gettime(CLOCK_MONOTONIC, &fim);
+        segundos = fim.tv_sec - inicio.tv_sec;
+        nanosegundos = fim.tv_nsec - inicio.tv_nsec;
+        tempo_gasto = segundos + nanosegundos * 1e-9;
+        // Exibe o tempo gasto com precisão de milissegundos
+        printf("Tempo de execução: %f segundos\n", tempo_gasto);
         free(expected_output);
         free(data);
         data = &accuracy;
