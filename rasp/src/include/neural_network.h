@@ -17,8 +17,6 @@ typedef struct neural_network_t_ {
 typedef struct neural_network_layers_t_ {
   float32_t* Z1;
   float32_t* A1;
-  float32_t* Z2;
-  float32_t* A2;
 } neural_network_layers_t;
 
 typedef struct neural_network_gradient_t_ {
