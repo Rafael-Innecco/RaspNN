@@ -82,6 +82,8 @@ int main_server() {  // CNN Variables
         break;
       case END_CONNECTION:
         result = &server_fd;
+        socket_close(server_fd);
+        return 0;
         break;
       default:
     }

@@ -73,7 +73,7 @@ make clean
 
 ## Instruções para Execução da Rede Neural Comparativa
 
-Na pasta examples/slow_neural_network, está disponível uma versão simplificada do conjunto cliente-servidor, que pode ser executada em computadores comuns para efeito de comparação de desempenho.
+Na pasta examples/slow_neural_network, está disponível uma versão simplificada do conjunto cliente-servidor, que pode ser executada em computadores comuns para efeito de comparação de desempenho (um Raspberry Pi 3B+ levou apenas 3.7s para rodar a versão otimizada!).
 
 Para isso, deve-se primeiro acessar a pasta examples/slow_neural_network/server e executar o comando para acionar a aplicação do servidor no terminal.
 
