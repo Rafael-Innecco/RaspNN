@@ -70,3 +70,20 @@ Para limpar os executáveis criados:
 ```bash
 make clean
 ```
+
+## Instruções para Execução da Rede Neural Comparativa
+
+Na pasta examples/slow_neural_network, está disponível uma versão simplificada do conjunto cliente-servidor, que pode ser executada em computadores comuns para efeito de comparação de desempenho.
+
+Para isso, deve-se primeiro acessar a pasta examples/slow_neural_network/server e executar o comando para acionar a aplicação do servidor no terminal.
+
+```bash
+make run
+```
+
+Em seguida, utilizando outro terminal, deve-se acessar a pasta examples/slow_neural_network/client e executar o mesmo comando
+
+```bash
+make run
+```
+Com isso, o treinamento será automaticamente iniciado, sem a necessidade de nenhuma ação adicional, e em alguns instantes o terminal em que a execução do servidor foi iniciada irá exibir o tempo de execução do treinamento. A partir desse ponto, a aplicação pode ser encerrada.
