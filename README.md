@@ -86,4 +86,4 @@ Em seguida, utilizando outro terminal, deve-se acessar a pasta examples/slow_neu
 ```bash
 make run
 ```
-Com isso, o treinamento será automaticamente iniciado, sem a necessidade de nenhuma ação adicional, e em alguns instantes o terminal em que a execução do servidor foi iniciada irá exibir o tempo de execução do treinamento. A partir desse ponto, a aplicação pode ser encerrada.
+Com isso, o treinamento será automaticamente iniciado, sem a necessidade de nenhuma ação adicional, e em alguns instantes o terminal em que a execução do servidor foi iniciada irá exibir o tempo de execução do treinamento. Após o término do treinamento, ambos os programas serão encerrados automaticamente.
