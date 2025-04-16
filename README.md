@@ -1,89 +1,91 @@
+
 # RaspNN
 
-Esse projeto tem como objetivo o desenvolvimento de uma Rede Neural na linguagem C utilizando recursos de hardware específicos do Raspberry Pi para tornar o treinamento e a inferência mais rápida.
+This project aims to develop a Neural Network in the C programming language using specific Raspberry Pi hardware resources to accelerate training and inference.
 
-O recurso de aceleração escolhido para esse projeto foi o ARM NEON, trata-se de um processador vetorial da ARM capaz de processar 128 bits (na versão v7) paralelamente. Para a utilização desse foi utilizada a biblioteca <arm_neon.h> (também conhecida como ARM Intrinsics) que contêm diversos wrappers para as instruções assembly desse processador vetorial.
+The hardware acceleration chosen for this project is ARM NEON, which is an ARM vector processor capable of processing 128 bits in parallel (in the v7 version). To use this, the project utilizes the `<arm_neon.h>` library (also known as ARM Intrinsics), which contains several wrappers for the assembly instructions of this vector processor.
 
-Para facilitar o porte desse projeto para outros aceleradores, encapsulou-se a lógica do ARM NEON nos arquivos rasp/src/source/matrix.c e rasp/src/source/math_func.c.
+To simplify porting this project to other accelerators, the ARM NEON logic was encapsulated in the files `rasp/src/source/matrix.c` and `rasp/src/source/math_func.c`.
 
-A Rede Neural desenvolvida para esse projeto tem apenas duas camadas (entrada e saída, não há camadas escondidas) e tem como objetivo o reconhecimento de dígitos do conjunto de dados do MNIST. Sua lógica está contida no arquivo rasp/src/source/neural_network.c.
+The Neural Network developed for this project has only two layers (input and output, with no hidden layers) and its goal is to recognize digits from the MNIST dataset. Its logic is contained in the file `rasp/src/source/neural_network.c`.
 
-Além disso, foi criada uma Aplicação Cliente-Servidor (sobre o protocolo TCP) para a comunicação entre o Raspberry Pi e o Computador. Desse modo, um computador qualquer pode enviar imagens e rótulos para a placa Raspberry Pi para que ela possa realizar o treinamento/inferência da rede.
+Furthermore, a Client-Server Application (using the TCP protocol) was created to enable communication between the Raspberry Pi and a Computer. In this way, any computer can send images and labels to the Raspberry Pi so it can perform the network’s training/inference.
 
-Esse projeto foi testado em um Raspberry Pi 3B+, todavia acredita-se que qualquer processador ARM que suporte o ARM NEON v7 será capaz de executar esse projeto sem problemas. Contudo, tenha atenção ao compilador utilizado, pois foi verificado que diversos compiladores cruzados não geravam as instruções de máquina corretas do NEON. Desse modo, aconselha-se a utilizar compiladores nativos, em especial notou-se que o compilador do Raspbian OS Lite gera os binários esperados.
+This project was tested on a Raspberry Pi 3B+, but it is believed that any ARM processor supporting ARM NEON v7 will be able to run this project without issues. However, pay attention to the compiler used, as it has been verified that several cross-compilers did not generate the correct NEON machine instructions. Therefore, it is recommended to use native compilers, and it was particularly noted that the compiler from Raspbian OS Lite generates the expected binaries.
 
-## Instruções de Uso
+## Usage Instructions
 
-Para compilar e executar a aplicação servidor do Raspberry Pi quanto a aplicação cliente Desktop basta utilizar os targets corretos do Makefile presente na raíz desse diretório.
+To compile and run the Raspberry Pi server application as well as the Desktop client application, simply use the correct targets in the Makefile located in the root of this directory.
 
-Primeiramente, deve-se criar os diretórios build dentro dos diretórios desktop e rasp, como pode ser visto a seguir:
+First, create the `build` directories inside the `desktop` and `rasp` directories, as shown below:
 
 ```bash
 mkdir rasp/build/
 mkdir desktop/build/
 ```
 
-Para compilar e executar o servidor no Raspberry Pi, basta utilizar o comando:
+To compile and run the server on the Raspberry Pi, use the command:
 
 ```bash
 make
 ```
 
-Para compilador o servidor no Raspberry Pi:
+To compile the server on the Raspberry Pi:
 
 ```bash
 make compile
 ```
 
-Para testar as funções do matrix e do math_func no Raspberry Pi:
+To test the functions of the matrix and math_func on the Raspberry Pi:
 
 ```bash
 make tests
 ```
 
-Para executar o servidor no Raspberry Pi:
+To run the server on the Raspberry Pi:
 
 ```bash
 make run
 ```
 
-Para executar o servidor na Raspberry Pi com o [Valgrind](https://valgrind.org/), basta utilizar o comando:
+To run the server on the Raspberry Pi with [Valgrind](https://valgrind.org/), use the command:
 
 ```bash
 make check
 ```
 
-Para gerar os arquivos em linguagem de montagem do Raspberry Pi, basta utilizar o comando:
+To generate the assembly language files for the Raspberry Pi, use the command:
 
 ```bash
 make assembly
 ```
 
-Para compilador o cliente no desktop:
+To compile the client on the desktop:
 
 ```bash
 make build_client
 ```
 
-Para limpar os executáveis criados:
+To clean up the created executables:
 
 ```bash
 make clean
 ```
 
-## Instruções para Execução da Rede Neural Comparativa
+## Instructions for Running the Comparative Neural Network
 
-Na pasta examples/slow_neural_network, está disponível uma versão simplificada do conjunto cliente-servidor, que pode ser executada em computadores comuns para efeito de comparação de desempenho (um Raspberry Pi 3B+ levou apenas 3.7s para rodar a versão otimizada!).
+Inside the `examples/slow_neural_network` folder, there is a simplified version of the client-server setup which can be executed on common computers for performance comparison purposes (a Raspberry Pi 3B+ took only 3.7 seconds to run the optimized version!).
 
-Para isso, deve-se primeiro acessar a pasta examples/slow_neural_network/server e executar o comando para acionar a aplicação do servidor no terminal.
+For this, first navigate to the `examples/slow_neural_network/server` folder and run the command to start the server application in the terminal.
+
+```bash
+make run
+```
+
+Then, in another terminal, navigate to the `examples/slow_neural_network/client` folder and execute the same command
 
 ```bash
 make run
 ```
 
-Em seguida, utilizando outro terminal, deve-se acessar a pasta examples/slow_neural_network/client e executar o mesmo comando
-
-```bash
-make run
-```
-Com isso, o treinamento será automaticamente iniciado, sem a necessidade de nenhuma ação adicional, e em alguns instantes o terminal em que a execução do servidor foi iniciada irá exibir o tempo de execução do treinamento. Após o término do treinamento, ambos os programas serão encerrados automaticamente.
+With this, the training will automatically start without any additional action, and shortly, the terminal where the server was started will display the training execution time. After the training is complete, both programs will automatically terminate.
